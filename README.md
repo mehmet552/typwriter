@@ -1,3 +1,7 @@
+<img width="1920" height="1080" alt="Screenshot From 2026-10-04 23-44-09" src="https://github.com/user-attachments/assets/30648351-9eee-48cf-a66f-b14a27454aaf" />
+
+<img width="1920" height="1080" alt="Screenshot From 2026-10-04 23-44-30" src="https://github.com/user-attachments/assets/e69dd60d-d00b-4418-948e-e8b2469c1c07" />
+
 #  Typwriter
 
 Daktilo temalı odaklanma yazma uygulaması. / Typewriter-themed focused writing application.
