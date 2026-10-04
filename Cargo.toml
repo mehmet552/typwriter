@@ -11,5 +11,12 @@ repository = "https://github.com/mehmet/typwriter"
 gtk4 = { version = "0.9", features = ["v4_12"] }
 libadwaita = { version = "0.7", features = ["v1_4"] }
 rodio = { version = "0.19", default-features = false, features = ["wav"] }
-rand = "0.8"
 zip = { version = "8.6.0", default-features = false, features = ["deflate"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
