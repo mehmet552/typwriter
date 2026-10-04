@@ -15,6 +15,9 @@ static SOUND_BACKSPACE: &[u8] = include_bytes!("../data/sounds/backspace.wav");
 static SOUND_BELL: &[u8] = include_bytes!("../data/sounds/bell.wav");
 static SOUND_RETURN: &[u8] = include_bytes!("../data/sounds/return.wav");
 
+// Gerçek Şömine Sesi (Kullanıcının yüklediği orijinal şömine çıtırtı kaydı)
+static SOUND_FIREPLACE: &[u8] = include_bytes!("../data/sounds/fireplace.wav");
+
 fn decode_wav(bytes: &'static [u8]) -> Vec<f32> {
     if let Ok(decoder) = rodio::Decoder::new(std::io::Cursor::new(bytes)) {
         return decoder.convert_samples::<f32>().collect();
@@ -54,36 +57,26 @@ impl SoundManager {
         ];
         key_sounds.retain(|s| !s.is_empty());
 
-        // 2. Boşluk (Space), Geri (Backspace), Satır Başı (Return - Başa Kaydırma ve Tik Sesi)
+        // 2. Boşluk, Geri, Satır Başı (Başa kaydırma ve tik sesi), Satır Sonu Zili
         let space_sound = decode_wav(SOUND_SPACE);
         let backspace_sound = decode_wav(SOUND_BACKSPACE);
         let enter_sound = decode_wav(SOUND_RETURN);
         let bell_sound = decode_wav(SOUND_BELL);
 
-        // 3. Atmosfer Ortam Sesleri (Şömine, Yağmur, Gece, Kafe)
+        // 3. Atmosfer Ortam Sesleri
+        let mut ambient_sounds = HashMap::new();
+
+        // Şömine: Kullanıcının yüklediği gerçek şömine çıtırtısı (kesintisiz dikişsiz döngü)
+        let fireplace_samples = decode_wav(SOUND_FIREPLACE);
+        if !fireplace_samples.is_empty() {
+            ambient_sounds.insert("Fireplace".to_string(), fireplace_samples);
+        }
+
         let mut rng = rand::thread_rng();
         let sample_rate = 44100.0;
         let pi2 = 2.0 * std::f32::consts::PI;
-
-        let mut ambient_sounds = HashMap::new();
         let loop_duration = 8.0;
         let loop_samples = (loop_duration * sample_rate) as usize;
-
-        // Şömine
-        let mut fireplace = Vec::with_capacity(loop_samples);
-        let mut prev_brown = 0.0;
-        for i in 0..loop_samples {
-            let t = i as f32 / sample_rate;
-            let white: f32 = rng.gen_range(-1.0..1.0);
-            prev_brown = (prev_brown + white) * 0.5;
-            let mut crackle = 0.0;
-            if rng.gen::<f32>() < 0.0001 {
-                crackle = rng.gen_range(0.5..1.0);
-            }
-            let mod_vol = 0.7 + 0.3 * (pi2 * 0.2 * t).sin();
-            fireplace.push((prev_brown + crackle) * mod_vol * 0.15);
-        }
-        ambient_sounds.insert("Fireplace".to_string(), fireplace);
 
         // Yağmur
         let mut rain = Vec::with_capacity(loop_samples);
