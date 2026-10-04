@@ -25,7 +25,7 @@ Daktilo temalı odaklanma yazma uygulaması. / Typewriter-themed focused writing
 - **Gelişmiş Ayarlar / Settings:**
   - Kağıt formatı seçimi, daktilo ve ambiyans ses seviyesi ayarları.
 
-## 🚀 Kurulum & Paketler / Packages & Installation
+##  Kurulum & Paketler / Packages & Installation
 
 En son hazır paketleri [GitHub Releases](https://github.com/mehmet552/typwriter/releases) sayfasından indirebilir veya yerel `dist/` klasöründen kurabilirsiniz:
 
