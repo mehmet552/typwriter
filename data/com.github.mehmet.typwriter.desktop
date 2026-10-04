@@ -1,11 +1,16 @@
 [Desktop Entry]
 Name=Typwriter
-Comment=Daktilo temalı odaklanma yazma uygulaması
-Comment[en]=Typewriter-themed focused writing application
-Exec=typwriter
+GenericName=Typewriter Focus Editor
+GenericName[tr]=Daktilo Odaklanma Editörü
+GenericName[en]=Typewriter Focus Editor
+Comment=Typewriter-themed distraction-free writing application with ambient audio
+Comment[tr]=Daktilo temalı, atmosfer sesli odaklanma yazma uygulaması
+Comment[en]=Typewriter-themed distraction-free writing application with ambient audio
+Exec=typwriter %F
 Icon=com.github.mehmet.typwriter
 Terminal=false
 Type=Application
-Categories=Office;TextEditor;
-Keywords=typewriter;writing;focus;distraction-free;daktilo;yazma;
+MimeType=application/vnd.openxmlformats-officedocument.wordprocessingml.document;text/plain;text/markdown;
+Categories=Office;WordProcessor;TextEditor;Utility;
+Keywords=typewriter;writing;focus;distraction-free;daktilo;yazma;docx;office;
 StartupWMClass=com.github.mehmet.typwriter
