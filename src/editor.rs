@@ -22,8 +22,18 @@ pub fn create_editor(
     let key_controller = gtk4::EventControllerKey::new();
     let sm = sound_manager.clone();
     let tw = typewriter_state.clone();
+    let tv_clone = text_view.clone();
 
     key_controller.connect_key_pressed(move |_, keyval, _, _| {
+        // Mevcut imlecin satırdaki sütun konumunu al
+        let buf = tv_clone.buffer();
+        let cur_col = if let Some(mark) = buf.mark("insert") {
+            let iter = buf.iter_at_mark(&mark);
+            iter.line_offset() as usize
+        } else {
+            0
+        };
+
         match keyval {
             gtk4::gdk::Key::Return | gtk4::gdk::Key::KP_Enter => {
                 sm.play_enter();
@@ -33,6 +43,8 @@ pub fn create_editor(
                 st.strike_progress = 0.0;
                 st.last_char = None;
                 st.active_key_index = None;
+                st.carriage_steps = 0;
+                st.bell_played_on_line = false;
                 st.current_line.clear();
             }
             gtk4::gdk::Key::space => {
@@ -43,6 +55,14 @@ pub fn create_editor(
                 st.carriage_steps += 1;
                 st.active_key_index = Some(9); // Ortadaki boşluk mekanizması
                 st.current_line.push(' ');
+
+                // Satır sonu (50. sütun) zili / tik sesi
+                let effective_col = cur_col.max(st.carriage_steps);
+                if effective_col >= 50 && !st.bell_played_on_line {
+                    sm.play_bell();
+                    st.bell_played_on_line = true;
+                }
+
                 if st.current_line.len() > 45 {
                     let trim_idx = st.current_line.char_indices().nth(8).map(|(i, _)| i).unwrap_or(0);
                     st.current_line = st.current_line[trim_idx..].to_string();
@@ -56,14 +76,20 @@ pub fn create_editor(
                 if st.carriage_steps > 0 {
                     st.carriage_steps -= 1;
                 }
+                if cur_col < 45 {
+                    st.bell_played_on_line = false;
+                }
             }
             _ => {
                 if let Some(ch) = keyval.to_unicode() {
                     let mut st = tw.borrow_mut();
-                    
-                    // Satır sonu yaklaştığında (60-65 karakter) daktilo zili çal
-                    if st.carriage_steps == 62 {
+                    st.carriage_steps += 1;
+
+                    // Satır sonuna gelindiğinde (50. karakterde) daktilo zili / tik sesi çal
+                    let effective_col = cur_col.max(st.carriage_steps);
+                    if effective_col >= 50 && !st.bell_played_on_line {
                         sm.play_bell();
+                        st.bell_played_on_line = true;
                     }
 
                     sm.play_key_click();
@@ -86,7 +112,6 @@ pub fn create_editor(
                     st.strike_progress = 1.0;
                     st.active_key_index = Some(bar_idx);
                     st.last_char = Some(ch);
-                    st.carriage_steps += 1;
                     st.current_line.push(ch);
 
                     if st.current_line.len() > 45 {

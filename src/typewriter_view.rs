@@ -13,6 +13,7 @@ pub struct TypewriterState {
     pub carriage_steps: usize,  // Satırdaki karakter adımı
     pub active_key_index: Option<usize>, // 0..18 hangi çekiç kolu kalktı
     pub roller_roll_angle: f64, // Enter basıldığında silindirin dönme açısı
+    pub bell_played_on_line: bool, // Satır sonu zili çaldı mı
 }
 
 impl TypewriterState {
@@ -26,6 +27,7 @@ impl TypewriterState {
             carriage_steps: 0,
             active_key_index: None,
             roller_roll_angle: 0.0,
+            bell_played_on_line: false,
         }
     }
 }
