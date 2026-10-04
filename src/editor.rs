@@ -8,7 +8,7 @@ pub fn create_editor(
     paper_format: Rc<RefCell<crate::paper_format::PaperFormat>>,
 ) -> gtk4::TextView {
     let text_view = gtk4::TextView::new();
-    text_view.set_wrap_mode(gtk4::WrapMode::Word);
+    text_view.set_wrap_mode(gtk4::WrapMode::Char);
     text_view.set_left_margin(55);
     text_view.set_right_margin(55);
     text_view.set_top_margin(45);
@@ -25,11 +25,29 @@ pub fn create_editor(
     let key_controller = gtk4::EventControllerKey::new();
     let sm = sound_manager.clone();
     let tw = typewriter_state.clone();
+    let tv_clone = text_view.clone();
     let pf_clone = paper_format.clone();
 
-    key_controller.connect_key_pressed(move |_, keyval, _, _| {
+    key_controller.connect_key_pressed(move |_, keyval, _, state| {
+        let is_ctrl = state.contains(gtk4::gdk::ModifierType::CONTROL_MASK);
+        let is_alt = state.contains(gtk4::gdk::ModifierType::ALT_MASK);
+
+        // Kısayollara (Ctrl+S, Ctrl+O, Ctrl+Shift+S vb.) doğrudan izin ver
+        if is_ctrl || is_alt {
+            return gtk4::glib::Propagation::Proceed;
+        }
+
         let capacity = pf_clone.borrow().line_capacity();
-        let bell_col = pf_clone.borrow().bell_trigger_col();
+
+        // Mevcut imlecin satırdaki karakter konumu (satır başından kaçıncı karakter)
+        let buf = tv_clone.buffer();
+        let cur_line_col = if let Some(mark) = buf.mark("insert") {
+            let iter = buf.iter_at_mark(&mark);
+            iter.line_offset() as usize
+        } else {
+            0
+        };
+        let has_selection = buf.has_selection();
 
         match keyval {
             gtk4::gdk::Key::Return | gtk4::gdk::Key::KP_Enter => {
@@ -43,32 +61,8 @@ pub fn create_editor(
                 st.carriage_steps = 0;
                 st.bell_played_on_line = false;
                 st.current_line.clear();
-            }
-            gtk4::gdk::Key::space => {
-                sm.play_space();
-                let mut st = tw.borrow_mut();
-                st.strike_progress = 0.4;
-                st.last_char = Some(' ');
-                st.carriage_steps += 1;
-                st.active_key_index = Some(9); // Ortadaki boşluk mekanizması
-                st.current_line.push(' ');
-
-                // Satır kapasitesine ulaşınca alt satıra geç ve zili yeni satır için hazırla
-                if st.carriage_steps >= capacity {
-                    st.carriage_steps = 0;
-                    st.bell_played_on_line = false;
-                }
-
-                // Satır sonu uyarı zili (tik sesi)
-                if st.carriage_steps >= bell_col && !st.bell_played_on_line {
-                    sm.play_bell();
-                    st.bell_played_on_line = true;
-                }
-
-                if st.current_line.len() > 45 {
-                    let trim_idx = st.current_line.char_indices().nth(8).map(|(i, _)| i).unwrap_or(0);
-                    st.current_line = st.current_line[trim_idx..].to_string();
-                }
+                // Enter basıldığında alt satıra geçilir ve yazma kilidi açılır
+                gtk4::glib::Propagation::Proceed
             }
             gtk4::gdk::Key::BackSpace => {
                 sm.play_backspace();
@@ -78,30 +72,57 @@ pub fn create_editor(
                 if st.carriage_steps > 0 {
                     st.carriage_steps -= 1;
                 }
-                if st.carriage_steps < bell_col {
+                if cur_line_col <= capacity {
                     st.bell_played_on_line = false;
                 }
+                gtk4::glib::Propagation::Proceed
+            }
+            gtk4::gdk::Key::space => {
+                // Tik sesinden sonra (satır kapasitesine ulaşıldığında):
+                // KİLİTLE! Otomatik alt satıra geçmeden yazmayı durdur. Enter şart!
+                if !has_selection && cur_line_col >= capacity {
+                    return gtk4::glib::Propagation::Stop;
+                }
+
+                sm.play_space();
+
+                // Eğer bu boşluk satırın son izin verilen karakteriyse tik sesi (daktilo zili) çalar
+                if cur_line_col + 1 >= capacity {
+                    sm.play_bell();
+                }
+
+                let mut st = tw.borrow_mut();
+                st.strike_progress = 0.4;
+                st.last_char = Some(' ');
+                st.carriage_steps = cur_line_col + 1;
+                st.active_key_index = Some(9);
+                st.current_line.push(' ');
+
+                if st.current_line.len() > 45 {
+                    let trim_idx = st.current_line.char_indices().nth(8).map(|(i, _)| i).unwrap_or(0);
+                    st.current_line = st.current_line[trim_idx..].to_string();
+                }
+
+                gtk4::glib::Propagation::Proceed
             }
             _ => {
                 if let Some(ch) = keyval.to_unicode() {
-                    let mut st = tw.borrow_mut();
-                    st.carriage_steps += 1;
-
-                    // Satır kapasitesine ulaşınca alt satıra geç ve zili yeni satır için hazırla
-                    if st.carriage_steps >= capacity {
-                        st.carriage_steps = 0;
-                        st.bell_played_on_line = false;
-                    }
-
-                    // Kağıt formatının satır sonu yaklaşınca daktilo uyarı zili / tik sesi çal
-                    if st.carriage_steps >= bell_col && !st.bell_played_on_line {
-                        sm.play_bell();
-                        st.bell_played_on_line = true;
+                    // Tik sesinden sonra (satır kapasitesine ulaşıldığında):
+                    // KİLİTLE! Enter basıp alt satıra inmeden kesinlikle daha fazla yazılamaz!
+                    if !has_selection && cur_line_col >= capacity {
+                        return gtk4::glib::Propagation::Stop;
                     }
 
                     sm.play_key_click();
 
-                    // Klavyedeki harfe göre daktilo sepetindeki ilgili çekiç kolunu seç
+                    // Eğer bu harf satırın son karakteriyse, daktilo uyarı zili (tik sesi) çalar!
+                    if cur_line_col + 1 >= capacity {
+                        sm.play_bell();
+                    }
+
+                    let mut st = tw.borrow_mut();
+                    st.carriage_steps = cur_line_col + 1;
+
                     let bar_idx = match ch.to_ascii_uppercase() {
                         'Q' | 'A' | 'Z' => 1,
                         'W' | 'S' | 'X' => 3,
@@ -125,10 +146,14 @@ pub fn create_editor(
                         let trim_idx = st.current_line.char_indices().nth(8).map(|(i, _)| i).unwrap_or(0);
                         st.current_line = st.current_line[trim_idx..].to_string();
                     }
+
+                    gtk4::glib::Propagation::Proceed
+                } else {
+                    // Yön tuşları, Page Up/Down, Home, End gibi gezinme tuşlarına her zaman izin ver
+                    gtk4::glib::Propagation::Proceed
                 }
             }
         }
-        gtk4::glib::Propagation::Proceed
     });
     text_view.add_controller(key_controller);
 

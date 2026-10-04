@@ -40,6 +40,7 @@ impl PaperFormat {
         }
     }
 
+    #[allow(dead_code)]
     pub fn bell_trigger_col(&self) -> usize {
         match self {
             PaperFormat::A4 => 54, // Satır sonuna 6 karakter kala daktilo uyarı zili çalar

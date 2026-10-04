@@ -14,7 +14,7 @@
     background-color: #1e1e1e;
     color: #d4c5a9;
     font-family: "Courier Prime", "Courier New", "Liberation Mono", "Noto Mono", monospace;
-    font-size: 20px;
+    font-size: 18px;
     caret-color: #d4c5a9;
     transition: background-color 0.8s ease, color 0.8s ease;
 }
