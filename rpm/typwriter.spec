@@ -20,7 +20,7 @@ Requires:       libadwaita >= 1.4
 %description
 Typwriter is a typewriter-themed focused writing application.
 It features realistic typewriter key sounds, ambient atmosphere
-sounds (fireplace, rain, night, cafe), DOCX/TXT document support,
+sounds (fireplace, rain, night, jazz), DOCX/TXT document support,
 and visual effects that immerse you in a distraction-free writing environment.
 
 Daktilo temalı odaklanma yazma uygulaması. Gerçekçi daktilo

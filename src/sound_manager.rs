@@ -1,4 +1,3 @@
-use rand::Rng;
 use rodio::Source;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -23,6 +22,9 @@ static SOUND_NIGHT: &[u8] = include_bytes!("../data/sounds/night.wav");
 
 // Gerçek Yağmur Sesi (Kullanıcının yüklediği orijinal yağmur atmosferi kaydı)
 static SOUND_RAIN: &[u8] = include_bytes!("../data/sounds/rain.wav");
+
+// Gerçek Caz Sesi (Kullanıcının yüklediği orijinal vintage caz kaydı)
+static SOUND_JAZZ: &[u8] = include_bytes!("../data/sounds/jazz.wav");
 
 fn decode_wav(bytes: &'static [u8]) -> Vec<f32> {
     if let Ok(decoder) = rodio::Decoder::new(std::io::Cursor::new(bytes)) {
@@ -78,12 +80,6 @@ impl SoundManager {
             ambient_sounds.insert("Fireplace".to_string(), fireplace_samples);
         }
 
-        let mut rng = rand::thread_rng();
-        let sample_rate = 44100.0;
-        let pi2 = 2.0 * std::f32::consts::PI;
-        let loop_duration = 8.0;
-        let loop_samples = (loop_duration * sample_rate) as usize;
-
         // Yağmur: Kullanıcının yüklediği gerçek yağmur atmosferi (kesintisiz döngü)
         let rain_samples = decode_wav(SOUND_RAIN);
         if !rain_samples.is_empty() {
@@ -96,26 +92,11 @@ impl SoundManager {
             ambient_sounds.insert("Night".to_string(), night_samples);
         }
 
-        // Kafe
-        let mut cafe = Vec::with_capacity(loop_samples);
-        let mut hist3 = vec![0.0; 3];
-        let mut h3_idx = 0;
-        for i in 0..loop_samples {
-            let t = i as f32 / sample_rate;
-            let white: f32 = rng.gen_range(-1.0..1.0);
-            hist3[h3_idx] = white;
-            h3_idx = (h3_idx + 1) % 3;
-            let avg = hist3.iter().sum::<f32>() / 3.0;
-
-            let mod1 = 0.5 + 0.3 * (pi2 * 0.3 * t).sin();
-            let mod2 = 0.6 + 0.2 * (pi2 * 0.7 * t).sin();
-            let mut conv = 0.0;
-            if rng.gen::<f32>() < 0.00005 {
-                conv = rng.gen_range(0.2..0.5);
-            }
-            cafe.push((avg * mod1 * mod2 + conv) * 0.08);
+        // Caz: Kullanıcının yüklediği gerçek vintage caz kaydı (kesintisiz döngü)
+        let jazz_samples = decode_wav(SOUND_JAZZ);
+        if !jazz_samples.is_empty() {
+            ambient_sounds.insert("Jazz".to_string(), jazz_samples);
         }
-        ambient_sounds.insert("Cafe".to_string(), cafe);
 
         Some(Self {
             _stream,

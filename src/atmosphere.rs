@@ -4,7 +4,7 @@ pub enum Atmosphere {
     Fireplace,
     Rain,
     Night,
-    Cafe,
+    Jazz,
 }
 
 impl Atmosphere {
@@ -14,7 +14,18 @@ impl Atmosphere {
             Atmosphere::Fireplace => "Şömine",
             Atmosphere::Rain => "Yağmur",
             Atmosphere::Night => "Gece",
-            Atmosphere::Cafe => "Kafe",
+            Atmosphere::Jazz => "Jazz",
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn label_en(&self) -> &str {
+        match self {
+            Atmosphere::Silent => "Silent",
+            Atmosphere::Fireplace => "Fireplace",
+            Atmosphere::Rain => "Rain",
+            Atmosphere::Night => "Night",
+            Atmosphere::Jazz => "Jazz",
         }
     }
 
@@ -24,7 +35,7 @@ impl Atmosphere {
             Atmosphere::Fireplace => "atmosphere-fireplace",
             Atmosphere::Rain => "atmosphere-rain",
             Atmosphere::Night => "atmosphere-night",
-            Atmosphere::Cafe => "atmosphere-cafe",
+            Atmosphere::Jazz => "atmosphere-jazz",
         }
     }
 
@@ -34,7 +45,7 @@ impl Atmosphere {
             Atmosphere::Fireplace => "🔥",
             Atmosphere::Rain => "🌧️",
             Atmosphere::Night => "🌙",
-            Atmosphere::Cafe => "☕",
+            Atmosphere::Jazz => "🎷",
         }
     }
 
@@ -44,7 +55,7 @@ impl Atmosphere {
             Atmosphere::Fireplace,
             Atmosphere::Rain,
             Atmosphere::Night,
-            Atmosphere::Cafe,
+            Atmosphere::Jazz,
         ]
     }
 }

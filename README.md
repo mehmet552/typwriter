@@ -14,7 +14,7 @@ Daktilo temalı odaklanma yazma uygulaması. / Typewriter-themed focused writing
   - 🔥 Şömine / Fireplace: Sıcak bir parıltı ve çıtırtı. (Warm glow and crackle.)
   - 🌧️ Yağmur / Rain: Yağmurlu bir günün huzuru. (Peace of a rainy day.)
   - 🌙 Gece / Night: Karanlık ve sessiz. (Dark and quiet.)
-  - ☕ Kafe / Cafe: Hafif bir kafe uğultusu. (Light cafe murmur.)
+  - 🎷 Caz / Jazz: Plak cızırtılı nostaljik caz melodisi. (Vintage vinyl jazz music.)
 - 🖥️ **Odak Modu / Focus Mode:** Tam ekran özelliği ile dikkat dağıtıcı unsurları engelleyin. (Block distractions with full-screen feature.)
 
 ## 🚀 Kurulum / Installation
