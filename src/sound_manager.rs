@@ -21,6 +21,9 @@ static SOUND_FIREPLACE: &[u8] = include_bytes!("../data/sounds/fireplace.wav");
 // Gerçek Gece Sesi (Kullanıcının yüklediği orijinal gece atmosferi kaydı)
 static SOUND_NIGHT: &[u8] = include_bytes!("../data/sounds/night.wav");
 
+// Gerçek Yağmur Sesi (Kullanıcının yüklediği orijinal yağmur atmosferi kaydı)
+static SOUND_RAIN: &[u8] = include_bytes!("../data/sounds/rain.wav");
+
 fn decode_wav(bytes: &'static [u8]) -> Vec<f32> {
     if let Ok(decoder) = rodio::Decoder::new(std::io::Cursor::new(bytes)) {
         return decoder.convert_samples::<f32>().collect();
@@ -81,21 +84,11 @@ impl SoundManager {
         let loop_duration = 8.0;
         let loop_samples = (loop_duration * sample_rate) as usize;
 
-        // Yağmur
-        let mut rain = Vec::with_capacity(loop_samples);
-        let mut history = vec![0.0; 10];
-        let mut hist_idx = 0;
-        for i in 0..loop_samples {
-            let t = i as f32 / sample_rate;
-            let white: f32 = rng.gen_range(-1.0..1.0);
-            history[hist_idx] = white;
-            hist_idx = (hist_idx + 1) % 10;
-            let avg: f32 = history.iter().sum::<f32>() / 10.0;
-            let pinkish = (white + avg) * 0.5;
-            let mod_vol = 0.85 + 0.15 * (pi2 * 0.1 * t).sin();
-            rain.push(pinkish * mod_vol * 0.12);
+        // Yağmur: Kullanıcının yüklediği gerçek yağmur atmosferi (kesintisiz döngü)
+        let rain_samples = decode_wav(SOUND_RAIN);
+        if !rain_samples.is_empty() {
+            ambient_sounds.insert("Rain".to_string(), rain_samples);
         }
-        ambient_sounds.insert("Rain".to_string(), rain);
 
         // Gece: Kullanıcının yüklediği gerçek gece atmosferi (kesintisiz döngü)
         let night_samples = decode_wav(SOUND_NIGHT);
