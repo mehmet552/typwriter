@@ -3,6 +3,25 @@ use rodio::Source;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
+// Gerçek daktilo sesleri (Kullanıcının yüklediği ses dosyasından çıkarılan orijinal sesler)
+static SOUND_KEY1: &[u8] = include_bytes!("../data/sounds/key1.wav");
+static SOUND_KEY2: &[u8] = include_bytes!("../data/sounds/key2.wav");
+static SOUND_KEY3: &[u8] = include_bytes!("../data/sounds/key3.wav");
+static SOUND_KEY4: &[u8] = include_bytes!("../data/sounds/key4.wav");
+static SOUND_KEY5: &[u8] = include_bytes!("../data/sounds/key5.wav");
+static SOUND_KEY6: &[u8] = include_bytes!("../data/sounds/key6.wav");
+static SOUND_SPACE: &[u8] = include_bytes!("../data/sounds/space.wav");
+static SOUND_BACKSPACE: &[u8] = include_bytes!("../data/sounds/backspace.wav");
+static SOUND_BELL: &[u8] = include_bytes!("../data/sounds/bell.wav");
+static SOUND_RETURN: &[u8] = include_bytes!("../data/sounds/return.wav");
+
+fn decode_wav(bytes: &'static [u8]) -> Vec<f32> {
+    if let Ok(decoder) = rodio::Decoder::new(std::io::Cursor::new(bytes)) {
+        return decoder.convert_samples::<f32>().collect();
+    }
+    vec![]
+}
+
 #[allow(dead_code)]
 pub struct SoundManager {
     _stream: rodio::OutputStream,
@@ -24,94 +43,33 @@ impl SoundManager {
     pub fn new() -> Option<Self> {
         let (_stream, stream_handle) = rodio::OutputStream::try_default().ok()?;
 
+        // 1. Orijinal Daktilo Tuş Sesleri (6 varyasyon)
+        let mut key_sounds = vec![
+            decode_wav(SOUND_KEY1),
+            decode_wav(SOUND_KEY2),
+            decode_wav(SOUND_KEY3),
+            decode_wav(SOUND_KEY4),
+            decode_wav(SOUND_KEY5),
+            decode_wav(SOUND_KEY6),
+        ];
+        key_sounds.retain(|s| !s.is_empty());
+
+        // 2. Boşluk (Space), Geri (Backspace), Satır Başı (Return - Başa Kaydırma ve Tik Sesi)
+        let space_sound = decode_wav(SOUND_SPACE);
+        let backspace_sound = decode_wav(SOUND_BACKSPACE);
+        let enter_sound = decode_wav(SOUND_RETURN);
+        let bell_sound = decode_wav(SOUND_BELL);
+
+        // 3. Atmosfer Ortam Sesleri (Şömine, Yağmur, Gece, Kafe)
         let mut rng = rand::thread_rng();
         let sample_rate = 44100.0;
         let pi2 = 2.0 * std::f32::consts::PI;
-
-        // Key Click (4 variations)
-        let mut key_sounds = Vec::new();
-        let variations = [
-            (60.0, 3000.0),
-            (80.0, 4000.0),
-            (70.0, 3500.0),
-            (90.0, 4500.0),
-        ];
-
-        for (decay_rate, freq) in variations.iter() {
-            let duration = 0.04;
-            let num_samples = (duration * sample_rate) as usize;
-            let mut samples = Vec::with_capacity(num_samples);
-            for i in 0..num_samples {
-                let t = i as f32 / sample_rate;
-                let noise: f32 = rng.gen_range(-1.0..1.0);
-                let env = (-t * decay_rate).exp();
-                let osc = (pi2 * freq * t).sin().abs().max(0.3);
-                samples.push(noise * env * osc * 0.4);
-            }
-            key_sounds.push(samples);
-        }
-
-        // Space bar sound
-        let space_duration = 0.06;
-        let space_samples = (space_duration * sample_rate) as usize;
-        let mut space_sound = Vec::with_capacity(space_samples);
-        for i in 0..space_samples {
-            let t = i as f32 / sample_rate;
-            let noise: f32 = rng.gen_range(-1.0..1.0);
-            let env = (-t * 40.0).exp();
-            let osc = (pi2 * 2000.0 * t).sin().abs().max(0.3);
-            space_sound.push(noise * env * osc * 0.5);
-        }
-
-        // Enter/Carriage Return
-        let enter_duration = 0.25;
-        let enter_samples = (enter_duration * sample_rate) as usize;
-        let mut enter_sound = Vec::with_capacity(enter_samples);
-        for i in 0..enter_samples {
-            let t = i as f32 / sample_rate;
-            if t < 0.15 {
-                let noise: f32 = rng.gen_range(-1.0..1.0);
-                let freq = 2000.0 - (1500.0 * (t / 0.15));
-                let osc = (pi2 * freq * t).sin();
-                enter_sound.push(noise * osc * 0.3);
-            } else {
-                let local_t = t - 0.15;
-                let noise: f32 = rng.gen_range(-1.0..1.0);
-                let env = (-local_t * 50.0).exp();
-                let osc = (pi2 * 200.0 * local_t).sin();
-                enter_sound.push(noise * env * osc * 0.4);
-            }
-        }
-
-        // Backspace
-        let bs_duration = 0.025;
-        let bs_samples = (bs_duration * sample_rate) as usize;
-        let mut backspace_sound = Vec::with_capacity(bs_samples);
-        for i in 0..bs_samples {
-            let t = i as f32 / sample_rate;
-            let noise: f32 = rng.gen_range(-1.0..1.0);
-            let env = (-t * 100.0).exp();
-            let osc = (pi2 * 5000.0 * t).sin().abs().max(0.3);
-            backspace_sound.push(noise * env * osc * 0.2);
-        }
-
-        // Bell
-        let bell_duration = 0.8;
-        let bell_samples = (bell_duration * sample_rate) as usize;
-        let mut bell_sound = Vec::with_capacity(bell_samples);
-        for i in 0..bell_samples {
-            let t = i as f32 / sample_rate;
-            let osc1 = (pi2 * 2000.0 * t).sin();
-            let osc2 = (pi2 * 4000.0 * t).sin() * 0.3;
-            let env = (-t * 4.0).exp();
-            bell_sound.push((osc1 + osc2) * env * 0.25);
-        }
 
         let mut ambient_sounds = HashMap::new();
         let loop_duration = 8.0;
         let loop_samples = (loop_duration * sample_rate) as usize;
 
-        // Fireplace
+        // Şömine
         let mut fireplace = Vec::with_capacity(loop_samples);
         let mut prev_brown = 0.0;
         for i in 0..loop_samples {
@@ -127,7 +85,7 @@ impl SoundManager {
         }
         ambient_sounds.insert("Fireplace".to_string(), fireplace);
 
-        // Rain
+        // Yağmur
         let mut rain = Vec::with_capacity(loop_samples);
         let mut history = vec![0.0; 10];
         let mut hist_idx = 0;
@@ -143,29 +101,31 @@ impl SoundManager {
         }
         ambient_sounds.insert("Rain".to_string(), rain);
 
-        // Night
+        // Gece
         let mut night = Vec::with_capacity(loop_samples);
         let mut chirp_env = 0.0;
         for i in 0..loop_samples {
             let t = i as f32 / sample_rate;
             let white: f32 = rng.gen_range(-1.0..1.0) * 0.02;
-            
+
             if i % (sample_rate as usize / 2) == 0 && rng.gen::<f32>() < 0.4 {
                 chirp_env = 1.0;
             }
-            
+
             let mut chirp = 0.0;
             if chirp_env > 0.0 {
                 chirp = (pi2 * 4500.0 * t).sin() * chirp_env * 0.08;
-                chirp_env -= 1.0 / (sample_rate * 0.03); // 30ms decay
-                if chirp_env < 0.0 { chirp_env = 0.0; }
+                chirp_env -= 1.0 / (sample_rate * 0.03);
+                if chirp_env < 0.0 {
+                    chirp_env = 0.0;
+                }
             }
-            
+
             night.push((white + chirp) * 0.05);
         }
         ambient_sounds.insert("Night".to_string(), night);
 
-        // Cafe
+        // Kafe
         let mut cafe = Vec::with_capacity(loop_samples);
         let mut hist3 = vec![0.0; 3];
         let mut h3_idx = 0;
@@ -175,7 +135,7 @@ impl SoundManager {
             hist3[h3_idx] = white;
             h3_idx = (h3_idx + 1) % 3;
             let avg = hist3.iter().sum::<f32>() / 3.0;
-            
+
             let mod1 = 0.5 + 0.3 * (pi2 * 0.3 * t).sin();
             let mod2 = 0.6 + 0.2 * (pi2 * 0.7 * t).sin();
             let mut conv = 0.0;
@@ -203,15 +163,21 @@ impl SoundManager {
     }
 
     fn play_oneshot(&self, samples: &[f32]) {
-        if !self.typing_enabled.get() { return; }
+        if !self.typing_enabled.get() || samples.is_empty() {
+            return;
+        }
         let source = rodio::buffer::SamplesBuffer::new(1, 44100, samples.to_vec());
         let _ = self.stream_handle.play_raw(source.convert_samples());
     }
 
     pub fn play_key_click(&self) {
+        if self.key_sounds.is_empty() {
+            return;
+        }
         let idx = self.current_click.get();
         self.play_oneshot(&self.key_sounds[idx]);
-        self.current_click.set((idx + 1) % self.key_sounds.len());
+        self.current_click
+            .set((idx + 1) % self.key_sounds.len());
     }
 
     pub fn play_space(&self) {

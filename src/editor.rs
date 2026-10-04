@@ -30,18 +30,21 @@ pub fn create_editor(
                 let mut st = tw.borrow_mut();
                 st.is_returning = true;
                 st.return_progress = 1.0;
-                st.strike_progress = 1.0;
-                st.last_char = Some('⏎');
+                st.strike_progress = 0.0;
+                st.last_char = None;
+                st.active_key_index = None;
                 st.current_line.clear();
             }
             gtk4::gdk::Key::space => {
                 sm.play_space();
                 let mut st = tw.borrow_mut();
-                st.strike_progress = 1.0;
+                st.strike_progress = 0.4;
                 st.last_char = Some(' ');
+                st.carriage_steps += 1;
+                st.active_key_index = Some(9); // Ortadaki boşluk mekanizması
                 st.current_line.push(' ');
-                if st.current_line.len() > 50 {
-                    let trim_idx = st.current_line.char_indices().nth(10).map(|(i, _)| i).unwrap_or(0);
+                if st.current_line.len() > 45 {
+                    let trim_idx = st.current_line.char_indices().nth(8).map(|(i, _)| i).unwrap_or(0);
                     st.current_line = st.current_line[trim_idx..].to_string();
                 }
             }
@@ -50,16 +53,44 @@ pub fn create_editor(
                 let mut st = tw.borrow_mut();
                 st.current_line.pop();
                 st.last_char = None;
+                if st.carriage_steps > 0 {
+                    st.carriage_steps -= 1;
+                }
             }
             _ => {
                 if let Some(ch) = keyval.to_unicode() {
-                    sm.play_key_click();
                     let mut st = tw.borrow_mut();
+                    
+                    // Satır sonu yaklaştığında (60-65 karakter) daktilo zili çal
+                    if st.carriage_steps == 62 {
+                        sm.play_bell();
+                    }
+
+                    sm.play_key_click();
+
+                    // Klavyedeki harfe göre daktilo sepetindeki ilgili çekiç kolunu seç
+                    let bar_idx = match ch.to_ascii_uppercase() {
+                        'Q' | 'A' | 'Z' => 1,
+                        'W' | 'S' | 'X' => 3,
+                        'E' | 'D' | 'C' => 5,
+                        'R' | 'F' | 'V' => 7,
+                        'T' | 'G' | 'B' => 9,
+                        'Y' | 'H' | 'N' => 10,
+                        'U' | 'J' | 'M' => 12,
+                        'I' | 'K' => 14,
+                        'O' | 'L' => 16,
+                        'P' => 17,
+                        _ => ch as usize % 18,
+                    };
+
                     st.strike_progress = 1.0;
+                    st.active_key_index = Some(bar_idx);
                     st.last_char = Some(ch);
+                    st.carriage_steps += 1;
                     st.current_line.push(ch);
-                    if st.current_line.len() > 50 {
-                        let trim_idx = st.current_line.char_indices().nth(10).map(|(i, _)| i).unwrap_or(0);
+
+                    if st.current_line.len() > 45 {
+                        let trim_idx = st.current_line.char_indices().nth(8).map(|(i, _)| i).unwrap_or(0);
                         st.current_line = st.current_line[trim_idx..].to_string();
                     }
                 }
