@@ -10,6 +10,8 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     let current_lang = Rc::new(RefCell::new(Language::Turkish));
     let current_file_path: Rc<RefCell<Option<PathBuf>>> = Rc::new(RefCell::new(None));
 
+    let current_paper_format = Rc::new(RefCell::new(crate::paper_format::PaperFormat::A4));
+
     let sound_manager = Rc::new(
         crate::sound_manager::SoundManager::new().expect("Failed to initialize audio"),
     );
@@ -19,7 +21,11 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
 
     let overlay = gtk4::Overlay::new();
 
-    let text_view = crate::editor::create_editor(sound_manager.clone(), tw_state.clone());
+    let text_view = crate::editor::create_editor(
+        sound_manager.clone(),
+        tw_state.clone(),
+        current_paper_format.clone(),
+    );
     let scrolled = gtk4::ScrolledWindow::new();
     scrolled.set_child(Some(&text_view));
     scrolled.set_vexpand(true);
@@ -277,6 +283,29 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     let lang_dropdown = gtk4::DropDown::from_strings(&["Türkçe", "English"]);
     lang_dropdown.set_selected(0);
 
+    let format_lbl_ref = gtk4::Label::new(Some(strings.paper_format_label));
+    format_lbl_ref.set_hexpand(true);
+    format_lbl_ref.set_halign(gtk4::Align::Start);
+
+    let format_dropdown = gtk4::DropDown::from_strings(&[strings.format_a4, strings.format_novel]);
+    format_dropdown.set_selected(0);
+
+    let pf_state = current_paper_format.clone();
+    let tv_for_format = text_view.clone();
+    format_dropdown.connect_selected_notify(move |dd| {
+        let new_format = if dd.selected() == 1 {
+            crate::paper_format::PaperFormat::Novel
+        } else {
+            crate::paper_format::PaperFormat::A4
+        };
+        *pf_state.borrow_mut() = new_format;
+        tv_for_format.set_width_request(new_format.width_pixels());
+    });
+
+    let format_row = gtk4::Box::new(gtk4::Orientation::Horizontal, 16);
+    format_row.append(&format_lbl_ref);
+    format_row.append(&format_dropdown);
+
     // Dil değiştiğinde arayüz yazılarını güncelle
     let lang_state = current_lang.clone();
     let title_ref = title.clone();
@@ -287,6 +316,7 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     let anim_lbl_ref = anim_label.clone();
     let sound_lbl_ref = sound_label.clone();
     let lang_lbl_ref = lang_label.clone();
+    let format_lbl_update = format_lbl_ref.clone();
     let status_lbl_ref = status_bar.clone();
     let text_view_ref = text_view.clone();
 
@@ -306,6 +336,7 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
         anim_lbl_ref.set_text(s.animation_switch);
         sound_lbl_ref.set_text(s.sound_switch);
         lang_lbl_ref.set_text(s.language_label);
+        format_lbl_update.set_text(s.paper_format_label);
         title_ref.set_title(s.app_title);
 
         let buf = text_view_ref.buffer();
@@ -319,6 +350,7 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     lang_row.append(&lang_label);
     lang_row.append(&lang_dropdown);
     popover_box.append(&lang_row);
+    popover_box.append(&format_row);
 
     let popover = gtk4::Popover::new();
     popover.set_child(Some(&popover_box));

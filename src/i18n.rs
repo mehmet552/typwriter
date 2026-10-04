@@ -42,6 +42,9 @@ pub struct Strings {
     pub atm_rain: &'static str,
     pub atm_night: &'static str,
     pub atm_cafe: &'static str,
+    pub paper_format_label: &'static str,
+    pub format_a4: &'static str,
+    pub format_novel: &'static str,
 }
 
 pub fn get_strings(lang: Language) -> Strings {
@@ -69,6 +72,9 @@ pub fn get_strings(lang: Language) -> Strings {
             atm_rain: "Yağmur",
             atm_night: "Gece",
             atm_cafe: "Kafe",
+            paper_format_label: "Kağıt Formatı",
+            format_a4: "A4 Sayfa (~70 Karakter)",
+            format_novel: "Roman / Kitap (~52 Karakter)",
         },
         Language::English => Strings {
             app_title: "Typwriter",
@@ -93,6 +99,9 @@ pub fn get_strings(lang: Language) -> Strings {
             atm_rain: "Rain",
             atm_night: "Night",
             atm_cafe: "Cafe",
+            paper_format_label: "Paper Format",
+            format_a4: "A4 Page (~70 Chars)",
+            format_novel: "Novel / Book (~52 Chars)",
         },
     }
 }

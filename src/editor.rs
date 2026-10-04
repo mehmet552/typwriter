@@ -5,24 +5,28 @@ use std::rc::Rc;
 pub fn create_editor(
     sound_manager: Rc<crate::sound_manager::SoundManager>,
     typewriter_state: Rc<RefCell<crate::typewriter_view::TypewriterState>>,
+    paper_format: Rc<RefCell<crate::paper_format::PaperFormat>>,
 ) -> gtk4::TextView {
     let text_view = gtk4::TextView::new();
     text_view.set_wrap_mode(gtk4::WrapMode::Word);
-    text_view.set_left_margin(60);
-    text_view.set_right_margin(60);
+    text_view.set_left_margin(50);
+    text_view.set_right_margin(50);
     text_view.set_top_margin(40);
     text_view.set_bottom_margin(40);
     text_view.add_css_class("typewriter-paper");
+    text_view.add_css_class("typewriter-sheet");
     text_view.set_monospace(true);
     text_view.set_cursor_visible(true);
     text_view.set_vexpand(true);
-    text_view.set_hexpand(true);
+    text_view.set_halign(gtk4::Align::Center);
+    text_view.set_width_request(paper_format.borrow().width_pixels());
 
     // Key press event handler
     let key_controller = gtk4::EventControllerKey::new();
     let sm = sound_manager.clone();
     let tw = typewriter_state.clone();
     let tv_clone = text_view.clone();
+    let pf_clone = paper_format.clone();
 
     key_controller.connect_key_pressed(move |_, keyval, _, _| {
         // Mevcut imlecin satırdaki sütun konumunu al
@@ -33,6 +37,8 @@ pub fn create_editor(
         } else {
             0
         };
+
+        let margin_col = pf_clone.borrow().line_margin_cols();
 
         match keyval {
             gtk4::gdk::Key::Return | gtk4::gdk::Key::KP_Enter => {
@@ -56,9 +62,9 @@ pub fn create_editor(
                 st.active_key_index = Some(9); // Ortadaki boşluk mekanizması
                 st.current_line.push(' ');
 
-                // Satır sonu (50. sütun) zili / tik sesi
+                // Kağıt formatının satır sonu sınırına gelince daktilo zili / tik sesi çal
                 let effective_col = cur_col.max(st.carriage_steps);
-                if effective_col >= 50 && !st.bell_played_on_line {
+                if effective_col >= margin_col && !st.bell_played_on_line {
                     sm.play_bell();
                     st.bell_played_on_line = true;
                 }
@@ -76,7 +82,7 @@ pub fn create_editor(
                 if st.carriage_steps > 0 {
                     st.carriage_steps -= 1;
                 }
-                if cur_col < 45 {
+                if cur_col < margin_col.saturating_sub(5) {
                     st.bell_played_on_line = false;
                 }
             }
@@ -85,9 +91,9 @@ pub fn create_editor(
                     let mut st = tw.borrow_mut();
                     st.carriage_steps += 1;
 
-                    // Satır sonuna gelindiğinde (50. karakterde) daktilo zili / tik sesi çal
+                    // Kağıt formatının satır sonuna gelince (A4: 70, Roman: 52) daktilo zili / tik sesi çal
                     let effective_col = cur_col.max(st.carriage_steps);
-                    if effective_col >= 50 && !st.bell_played_on_line {
+                    if effective_col >= margin_col && !st.bell_played_on_line {
                         sm.play_bell();
                         st.bell_played_on_line = true;
                     }
