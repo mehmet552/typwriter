@@ -18,6 +18,9 @@ static SOUND_RETURN: &[u8] = include_bytes!("../data/sounds/return.wav");
 // Gerçek Şömine Sesi (Kullanıcının yüklediği orijinal şömine çıtırtı kaydı)
 static SOUND_FIREPLACE: &[u8] = include_bytes!("../data/sounds/fireplace.wav");
 
+// Gerçek Gece Sesi (Kullanıcının yüklediği orijinal gece atmosferi kaydı)
+static SOUND_NIGHT: &[u8] = include_bytes!("../data/sounds/night.wav");
+
 fn decode_wav(bytes: &'static [u8]) -> Vec<f32> {
     if let Ok(decoder) = rodio::Decoder::new(std::io::Cursor::new(bytes)) {
         return decoder.convert_samples::<f32>().collect();
@@ -94,29 +97,11 @@ impl SoundManager {
         }
         ambient_sounds.insert("Rain".to_string(), rain);
 
-        // Gece
-        let mut night = Vec::with_capacity(loop_samples);
-        let mut chirp_env = 0.0;
-        for i in 0..loop_samples {
-            let t = i as f32 / sample_rate;
-            let white: f32 = rng.gen_range(-1.0..1.0) * 0.02;
-
-            if i % (sample_rate as usize / 2) == 0 && rng.gen::<f32>() < 0.4 {
-                chirp_env = 1.0;
-            }
-
-            let mut chirp = 0.0;
-            if chirp_env > 0.0 {
-                chirp = (pi2 * 4500.0 * t).sin() * chirp_env * 0.08;
-                chirp_env -= 1.0 / (sample_rate * 0.03);
-                if chirp_env < 0.0 {
-                    chirp_env = 0.0;
-                }
-            }
-
-            night.push((white + chirp) * 0.05);
+        // Gece: Kullanıcının yüklediği gerçek gece atmosferi (kesintisiz döngü)
+        let night_samples = decode_wav(SOUND_NIGHT);
+        if !night_samples.is_empty() {
+            ambient_sounds.insert("Night".to_string(), night_samples);
         }
-        ambient_sounds.insert("Night".to_string(), night);
 
         // Kafe
         let mut cafe = Vec::with_capacity(loop_samples);
