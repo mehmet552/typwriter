@@ -42,7 +42,7 @@ Priority: optional
 Architecture: amd64
 Maintainer: Mehmet <mehmet@localhost>
 Depends: libgtk-4-1 (>= 4.12) | libgtk-4-bin, libadwaita-1-0 (>= 1.4), libasound2 (>= 1.1)
-Homepage: https://github.com/mehmet/typwriter
+Homepage: https://github.com/mehmet552/typwriter
 Description: Typewriter-themed focused writing application
  Daktilo temali odaklanma yazma uygulamasi. Gercekci daktilo
  sesleri, atmosfer ortamlari, DOCX/TXT destegi ve gorsel efektlerle

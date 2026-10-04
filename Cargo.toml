@@ -5,7 +5,7 @@ edition = "2021"
 description = "A typewriter-themed focused writing application with ambient atmospheres"
 license = "GPL-3.0-or-later"
 authors = ["Mehmet"]
-repository = "https://github.com/mehmet/typwriter"
+repository = "https://github.com/mehmet552/typwriter"
 
 [dependencies]
 gtk4 = { version = "0.9", features = ["v4_12"] }

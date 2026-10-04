@@ -9,17 +9,25 @@ Daktilo temalı odaklanma yazma uygulaması. / Typewriter-themed focused writing
 
 ##  Özellikler / Features
 
-- **Gerçekçi Sesler / Realistic Sounds:** Her tuş vuruşunda tatmin edici daktilo sesleri. (Satisfying typewriter sounds with every keystroke.)
--  **Atmosferler / Atmospheres:** Yazma havasına girmek için farklı ortamlar: (Different environments to get in the mood for writing:)
-  -  Şömine / Fireplace: Sıcak bir parıltı ve çıtırtı. (Warm glow and crackle.)
-  - Yağmur / Rain: Yağmurlu bir günün huzuru. (Peace of a rainy day.)
-  -  Gece / Night: Karanlık ve sessiz. (Dark and quiet.)
-  -  Caz / Jazz: Plak cızırtılı nostaljik caz melodisi. (Vintage vinyl jazz music.)
-  -**Odak Modu / Focus Mode:** Tam ekran özelliği ile dikkat dağıtıcı unsurları engelleyin. (Block distractions with full-screen feature.)
+- **Gerçekçi Daktilo Mekaniği / Authentic Mechanical Typewriter:**
+  - Gerçekçi daktilo tuş, geri silme (backspace) ve satır başı kolu (carriage return) sesleri.
+  - **Mekanik Satır Sonu Kilidi (Margin Lock):** Satır sonuna geldiğinizde zil çalar ve Enter'a basıp alt satıra geçene kadar yazma kilitlenir (klasik mekanik daktilolardaki gibi).
+  - **Kağıt Formatı Seçimi:** Standart **A4** veya **Roman (Novel)** formatı seçimi ve gerçek sayfa kenar boşlukları.
+- **Atmosferler / Atmospheres:** Yazma havasına girmek için kesintisiz döngüde çalışan ortam sesleri:
+  - Şömine / Fireplace: Sıcak bir parıltı ve şömine çıtırtısı.
+  - Yağmur / Rain: Huzurlu yağmur sesi.
+  - Gece / Night: Dingin gece ambiyansı ve cırcır böcekleri.
+  - Caz / Jazz: Plak cızırtılı nostaljik caz melodisi.
+- **Belge Uyumluluğu / Document Support:**
+  - Microsoft Word `.docx` ve düz metin `.txt` formatında belgeleri açma, düzenleme ve kaydetme.
+- **Odaklanma Modu / Focus Mode:**
+  - Tam ekran modu (**F11**) ile dikkat dağıtıcı tüm unsurları ortadan kaldırın.
+- **Gelişmiş Ayarlar / Settings:**
+  - Kağıt formatı seçimi, daktilo ve ambiyans ses seviyesi ayarları.
 
 ## 🚀 Kurulum & Paketler / Packages & Installation
 
-`dist/` klasöründe tüm büyük Linux dağıtımları için hazır paketler mevcuttur:
+En son hazır paketleri [GitHub Releases](https://github.com/mehmet552/typwriter/releases) sayfasından indirebilir veya yerel `dist/` klasöründen kurabilirsiniz:
 
 ### 1. Fedora / RHEL / openSUSE (.rpm)
 ```bash

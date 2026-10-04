@@ -3,7 +3,7 @@ Version:        1.0.0
 Release:        1%{?dist}
 Summary:        Typewriter-themed focused writing application
 License:        GPL-3.0-or-later
-URL:            https://github.com/mehmet/typwriter
+URL:            https://github.com/mehmet552/typwriter
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 BuildRequires:  rust >= 1.70
