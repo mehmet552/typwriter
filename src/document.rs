@@ -167,3 +167,33 @@ fn write_docx(path: &Path, content: &str) -> Result<(), String> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_docx_roundtrip() {
+        let test_path = Path::new("/tmp/test_typwriter.docx");
+        let sample_text = "İstanbul'da bir daktilo sesi...\nŞömine çıtırtısı ve yağmur eşliğinde 1984 romanı.\nÖzel karakterler: <test> & \"alıntı\" 'tek tırnak'.";
+
+        assert!(save_document(test_path, sample_text).is_ok());
+        let loaded = load_document(test_path).expect("DOCX yüklenemedi");
+        assert_eq!(sample_text, loaded);
+
+        let _ = fs::remove_file(test_path);
+    }
+
+    #[test]
+    fn test_txt_roundtrip() {
+        let test_path = Path::new("/tmp/test_typwriter.txt");
+        let sample_text = "Düz metin belgesi test satırı.\nİkinci satır.";
+
+        assert!(save_document(test_path, sample_text).is_ok());
+        let loaded = load_document(test_path).expect("TXT yüklenemedi");
+        assert_eq!(sample_text, loaded);
+
+        let _ = fs::remove_file(test_path);
+    }
+}
