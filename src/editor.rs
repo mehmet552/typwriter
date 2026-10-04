@@ -9,10 +9,10 @@ pub fn create_editor(
 ) -> gtk4::TextView {
     let text_view = gtk4::TextView::new();
     text_view.set_wrap_mode(gtk4::WrapMode::Word);
-    text_view.set_left_margin(50);
-    text_view.set_right_margin(50);
-    text_view.set_top_margin(40);
-    text_view.set_bottom_margin(40);
+    text_view.set_left_margin(55);
+    text_view.set_right_margin(55);
+    text_view.set_top_margin(45);
+    text_view.set_bottom_margin(45);
     text_view.add_css_class("typewriter-paper");
     text_view.add_css_class("typewriter-sheet");
     text_view.set_monospace(true);
@@ -21,24 +21,15 @@ pub fn create_editor(
     text_view.set_halign(gtk4::Align::Center);
     text_view.set_width_request(paper_format.borrow().width_pixels());
 
-    // Key press event handler
+    // Tuş basma olay denetleyicisi
     let key_controller = gtk4::EventControllerKey::new();
     let sm = sound_manager.clone();
     let tw = typewriter_state.clone();
-    let tv_clone = text_view.clone();
     let pf_clone = paper_format.clone();
 
     key_controller.connect_key_pressed(move |_, keyval, _, _| {
-        // Mevcut imlecin satırdaki sütun konumunu al
-        let buf = tv_clone.buffer();
-        let cur_col = if let Some(mark) = buf.mark("insert") {
-            let iter = buf.iter_at_mark(&mark);
-            iter.line_offset() as usize
-        } else {
-            0
-        };
-
-        let margin_col = pf_clone.borrow().line_margin_cols();
+        let capacity = pf_clone.borrow().line_capacity();
+        let bell_col = pf_clone.borrow().bell_trigger_col();
 
         match keyval {
             gtk4::gdk::Key::Return | gtk4::gdk::Key::KP_Enter => {
@@ -62,9 +53,14 @@ pub fn create_editor(
                 st.active_key_index = Some(9); // Ortadaki boşluk mekanizması
                 st.current_line.push(' ');
 
-                // Kağıt formatının satır sonu sınırına gelince daktilo zili / tik sesi çal
-                let effective_col = cur_col.max(st.carriage_steps);
-                if effective_col >= margin_col && !st.bell_played_on_line {
+                // Satır kapasitesine ulaşınca alt satıra geç ve zili yeni satır için hazırla
+                if st.carriage_steps >= capacity {
+                    st.carriage_steps = 0;
+                    st.bell_played_on_line = false;
+                }
+
+                // Satır sonu uyarı zili (tik sesi)
+                if st.carriage_steps >= bell_col && !st.bell_played_on_line {
                     sm.play_bell();
                     st.bell_played_on_line = true;
                 }
@@ -82,7 +78,7 @@ pub fn create_editor(
                 if st.carriage_steps > 0 {
                     st.carriage_steps -= 1;
                 }
-                if cur_col < margin_col.saturating_sub(5) {
+                if st.carriage_steps < bell_col {
                     st.bell_played_on_line = false;
                 }
             }
@@ -91,9 +87,14 @@ pub fn create_editor(
                     let mut st = tw.borrow_mut();
                     st.carriage_steps += 1;
 
-                    // Kağıt formatının satır sonuna gelince (A4: 70, Roman: 52) daktilo zili / tik sesi çal
-                    let effective_col = cur_col.max(st.carriage_steps);
-                    if effective_col >= margin_col && !st.bell_played_on_line {
+                    // Satır kapasitesine ulaşınca alt satıra geç ve zili yeni satır için hazırla
+                    if st.carriage_steps >= capacity {
+                        st.carriage_steps = 0;
+                        st.bell_played_on_line = false;
+                    }
+
+                    // Kağıt formatının satır sonu yaklaşınca daktilo uyarı zili / tik sesi çal
+                    if st.carriage_steps >= bell_col && !st.bell_played_on_line {
                         sm.play_bell();
                         st.bell_played_on_line = true;
                     }

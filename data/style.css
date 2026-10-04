@@ -30,13 +30,18 @@
     color: #ffffff;
 }
 
+/* Scrolled window desk area */
+.typewriter-desk-area {
+    background-color: #131313;
+}
+
 /* Centered Typewriter Paper Sheet (A4 & Roman Format) */
 .typewriter-sheet {
-    box-shadow: 0 4px 28px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
     border-radius: 4px;
-    margin: 20px auto;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     transition: width 0.3s ease, background-color 0.8s ease;
+    min-height: 750px;
 }
 
 /* Status bar */

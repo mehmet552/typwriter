@@ -1,5 +1,6 @@
 use gtk4::prelude::*;
 use libadwaita as adw;
+use adw::prelude::*;
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -26,8 +27,20 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
         tw_state.clone(),
         current_paper_format.clone(),
     );
+    let clamp = adw::Clamp::new();
+    clamp.set_maximum_size(current_paper_format.borrow().width_pixels());
+    clamp.set_tightening_threshold(current_paper_format.borrow().width_pixels());
+    clamp.set_child(Some(&text_view));
+    clamp.set_vexpand(true);
+    clamp.set_margin_top(28);
+    clamp.set_margin_bottom(28);
+    clamp.set_margin_start(24);
+    clamp.set_margin_end(24);
+    clamp.add_css_class("typewriter-sheet-container");
+
     let scrolled = gtk4::ScrolledWindow::new();
-    scrolled.set_child(Some(&text_view));
+    scrolled.add_css_class("typewriter-desk-area");
+    scrolled.set_child(Some(&clamp));
     scrolled.set_vexpand(true);
 
     let glow = gtk4::Box::new(gtk4::Orientation::Vertical, 0);
@@ -230,132 +243,155 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     fullscreen_btn.set_tooltip_text(Some(strings.fullscreen_tooltip));
     header.pack_end(&fullscreen_btn);
 
-    // --- AYARLAR MENÜSÜ (Preferences / Settings Popover) ---
-    let settings_btn = gtk4::MenuButton::new();
-    settings_btn.set_icon_name("open-menu-symbolic");
+    // --- AYARLAR BUTONU (AdwPreferencesWindow) ---
+    let settings_btn = gtk4::Button::from_icon_name("open-menu-symbolic");
     settings_btn.set_tooltip_text(Some(strings.settings_tooltip));
+    header.pack_end(&settings_btn);
 
-    let popover_box = gtk4::Box::new(gtk4::Orientation::Vertical, 12);
-    popover_box.set_margin_start(16);
-    popover_box.set_margin_end(16);
-    popover_box.set_margin_top(16);
-    popover_box.set_margin_bottom(16);
-
-    // 1. Daktilo Animasyonu Aç/Kapa Anahtarı
-    let anim_row = gtk4::Box::new(gtk4::Orientation::Horizontal, 16);
-    let anim_label = gtk4::Label::new(Some(strings.animation_switch));
-    anim_label.set_hexpand(true);
-    anim_label.set_halign(gtk4::Align::Start);
-    let anim_switch = gtk4::Switch::new();
-    anim_switch.set_active(true);
-    let tw_toggle = tw_widget.clone();
-    anim_switch.connect_active_notify(move |sw| {
-        tw_toggle.set_visible(sw.is_active());
-    });
-    anim_row.append(&anim_label);
-    anim_row.append(&anim_switch);
-    popover_box.append(&anim_row);
-
-    // 2. Daktilo Tuş Sesleri Aç/Kapa Anahtarı
-    let sound_row = gtk4::Box::new(gtk4::Orientation::Horizontal, 16);
-    let sound_label = gtk4::Label::new(Some(strings.sound_switch));
-    sound_label.set_hexpand(true);
-    sound_label.set_halign(gtk4::Align::Start);
-    let sound_switch = gtk4::Switch::new();
-    sound_switch.set_active(true);
-    let sm_toggle = sound_manager.clone();
-    sound_switch.connect_active_notify(move |sw| {
-        sm_toggle.set_typing_enabled(sw.is_active());
-    });
-    sound_row.append(&sound_label);
-    sound_row.append(&sound_switch);
-    popover_box.append(&sound_row);
-
-    // Ayırıcı çizgi
-    popover_box.append(&gtk4::Separator::new(gtk4::Orientation::Horizontal));
-
-    // 3. Dil Seçici (TR / EN)
-    let lang_row = gtk4::Box::new(gtk4::Orientation::Horizontal, 16);
-    let lang_label = gtk4::Label::new(Some(strings.language_label));
-    lang_label.set_hexpand(true);
-    lang_label.set_halign(gtk4::Align::Start);
-
-    let lang_dropdown = gtk4::DropDown::from_strings(&["Türkçe", "English"]);
-    lang_dropdown.set_selected(0);
-
-    let format_lbl_ref = gtk4::Label::new(Some(strings.paper_format_label));
-    format_lbl_ref.set_hexpand(true);
-    format_lbl_ref.set_halign(gtk4::Align::Start);
-
-    let format_dropdown = gtk4::DropDown::from_strings(&[strings.format_a4, strings.format_novel]);
-    format_dropdown.set_selected(0);
-
-    let pf_state = current_paper_format.clone();
-    let tv_for_format = text_view.clone();
-    format_dropdown.connect_selected_notify(move |dd| {
-        let new_format = if dd.selected() == 1 {
-            crate::paper_format::PaperFormat::Novel
-        } else {
-            crate::paper_format::PaperFormat::A4
-        };
-        *pf_state.borrow_mut() = new_format;
-        tv_for_format.set_width_request(new_format.width_pixels());
-    });
-
-    let format_row = gtk4::Box::new(gtk4::Orientation::Horizontal, 16);
-    format_row.append(&format_lbl_ref);
-    format_row.append(&format_dropdown);
-
-    // Dil değiştiğinde arayüz yazılarını güncelle
-    let lang_state = current_lang.clone();
+    let win_ref_for_settings = window_ref.clone();
+    let tw_widget_ref = tw_widget.clone();
+    let sm_ref = sound_manager.clone();
+    let pf_ref = current_paper_format.clone();
+    let lang_ref = current_lang.clone();
+    let clamp_ref = clamp.clone();
+    let tv_ref = text_view.clone();
     let title_ref = title.clone();
     let open_btn_ref = open_btn.clone();
     let save_btn_ref = save_btn.clone();
     let save_as_ref = save_as_btn.clone();
     let fs_ref = fullscreen_btn.clone();
-    let anim_lbl_ref = anim_label.clone();
-    let sound_lbl_ref = sound_label.clone();
-    let lang_lbl_ref = lang_label.clone();
-    let format_lbl_update = format_lbl_ref.clone();
+    let settings_btn_ref = settings_btn.clone();
     let status_lbl_ref = status_bar.clone();
-    let text_view_ref = text_view.clone();
 
-    lang_dropdown.connect_selected_notify(move |dd| {
-        let new_lang = if dd.selected() == 1 {
-            Language::English
+    settings_btn.connect_clicked(move |_| {
+        let parent_win = win_ref_for_settings.borrow().clone();
+        let current_language = *lang_ref.borrow();
+        let s = get_strings(current_language);
+
+        let prefs = adw::PreferencesWindow::builder()
+            .modal(true)
+            .title(s.settings_tooltip)
+            .default_width(520)
+            .default_height(420)
+            .build();
+
+        if let Some(win) = &parent_win {
+            prefs.set_transient_for(Some(win));
+        }
+
+        let page = adw::PreferencesPage::new();
+        let group = adw::PreferencesGroup::new();
+        group.set_title(if current_language == Language::Turkish {
+            "Görünüm ve Tercihler"
         } else {
-            Language::Turkish
-        };
-        *lang_state.borrow_mut() = new_lang;
-        let s = get_strings(new_lang);
+            "Appearance & Preferences"
+        });
 
-        open_btn_ref.set_tooltip_text(Some(s.open_tooltip));
-        save_btn_ref.set_tooltip_text(Some(s.save_tooltip));
-        save_as_ref.set_tooltip_text(Some(s.save_as_tooltip));
-        fs_ref.set_tooltip_text(Some(s.fullscreen_tooltip));
-        anim_lbl_ref.set_text(s.animation_switch);
-        sound_lbl_ref.set_text(s.sound_switch);
-        lang_lbl_ref.set_text(s.language_label);
-        format_lbl_update.set_text(s.paper_format_label);
-        title_ref.set_title(s.app_title);
+        // 1. Daktilo Animasyonu
+        let anim_row = adw::SwitchRow::new();
+        anim_row.set_title(s.animation_switch);
+        anim_row.set_subtitle(if current_language == Language::Turkish {
+            "Alttaki mekanik daktilo çekiç animasyonu"
+        } else {
+            "Mechanical typewriter animation at the bottom"
+        });
+        anim_row.set_active(tw_widget_ref.is_visible());
+        let tw_for_sw = tw_widget_ref.clone();
+        anim_row.connect_active_notify(move |sw| {
+            tw_for_sw.set_visible(sw.is_active());
+        });
+        group.add(&anim_row);
 
-        let buf = text_view_ref.buffer();
-        let (words, chars) = crate::editor::get_stats(&buf);
-        status_lbl_ref.set_label(&format!(
-            "{}: {} | {}: {}",
-            s.words_label, words, s.chars_label, chars
-        ));
+        // 2. Daktilo Sesleri
+        let sound_row = adw::SwitchRow::new();
+        sound_row.set_title(s.sound_switch);
+        sound_row.set_subtitle(if current_language == Language::Turkish {
+            "Mekanik tuş vuruşu ve satır sonu zili"
+        } else {
+            "Mechanical keystrokes and end-of-line bell"
+        });
+        sound_row.set_active(sm_ref.is_typing_enabled());
+        let sm_for_sw = sm_ref.clone();
+        sound_row.connect_active_notify(move |sw| {
+            sm_for_sw.set_typing_enabled(sw.is_active());
+        });
+        group.add(&sound_row);
+
+        // 3. Kağıt Formatı (A4 / Roman)
+        let format_row = adw::ComboRow::new();
+        format_row.set_title(s.paper_format_label);
+        format_row.set_subtitle(if current_language == Language::Turkish {
+            "Sayfa kenar boşlukları ve satır uzunluğu"
+        } else {
+            "Page margins and line length"
+        });
+        let format_model = gtk4::StringList::new(&[s.format_a4, s.format_novel]);
+        format_row.set_model(Some(&format_model));
+        let cur_fmt = *pf_ref.borrow();
+        format_row.set_selected(if cur_fmt == crate::paper_format::PaperFormat::Novel { 1 } else { 0 });
+
+        let pf_inner = pf_ref.clone();
+        let clamp_inner = clamp_ref.clone();
+        let tv_inner = tv_ref.clone();
+        format_row.connect_selected_notify(move |cr| {
+            let new_fmt = if cr.selected() == 1 {
+                crate::paper_format::PaperFormat::Novel
+            } else {
+                crate::paper_format::PaperFormat::A4
+            };
+            *pf_inner.borrow_mut() = new_fmt;
+            clamp_inner.set_maximum_size(new_fmt.width_pixels());
+            clamp_inner.set_tightening_threshold(new_fmt.width_pixels());
+            tv_inner.set_width_request(new_fmt.width_pixels());
+        });
+        group.add(&format_row);
+
+        // 4. Dil (Türkçe / English)
+        let lang_row = adw::ComboRow::new();
+        lang_row.set_title(s.language_label);
+        let lang_model = gtk4::StringList::new(&["Türkçe", "English"]);
+        lang_row.set_model(Some(&lang_model));
+        lang_row.set_selected(if current_language == Language::English { 1 } else { 0 });
+
+        let lang_inner = lang_ref.clone();
+        let title_inner = title_ref.clone();
+        let open_inner = open_btn_ref.clone();
+        let save_inner = save_btn_ref.clone();
+        let save_as_inner = save_as_ref.clone();
+        let fs_inner = fs_ref.clone();
+        let settings_inner = settings_btn_ref.clone();
+        let status_inner = status_lbl_ref.clone();
+        let tv_for_stats = tv_ref.clone();
+
+        lang_row.connect_selected_notify(move |cr| {
+            let new_l = if cr.selected() == 1 {
+                Language::English
+            } else {
+                Language::Turkish
+            };
+            *lang_inner.borrow_mut() = new_l;
+            let ns = get_strings(new_l);
+
+            title_inner.set_title(ns.app_title);
+            open_inner.set_tooltip_text(Some(ns.open_tooltip));
+            save_inner.set_tooltip_text(Some(ns.save_tooltip));
+            save_as_inner.set_tooltip_text(Some(ns.save_as_tooltip));
+            fs_inner.set_tooltip_text(Some(ns.fullscreen_tooltip));
+            settings_inner.set_tooltip_text(Some(ns.settings_tooltip));
+
+            let buf = tv_for_stats.buffer();
+            let (words, chars) = crate::editor::get_stats(&buf);
+            status_inner.set_label(&format!(
+                "{}: {} | {}: {}",
+                ns.words_label, words, ns.chars_label, chars
+            ));
+        });
+        group.add(&lang_row);
+
+        page.add(&group);
+        prefs.add(&page);
+        prefs.present();
     });
-
-    lang_row.append(&lang_label);
-    lang_row.append(&lang_dropdown);
-    popover_box.append(&lang_row);
-    popover_box.append(&format_row);
-
-    let popover = gtk4::Popover::new();
-    popover.set_child(Some(&popover_box));
-    settings_btn.set_popover(Some(&popover));
-    header.pack_end(&settings_btn);
 
     // ToolbarView
     let toolbar_view = adw::ToolbarView::new();

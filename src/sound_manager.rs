@@ -178,4 +178,8 @@ impl SoundManager {
     pub fn set_typing_enabled(&self, enabled: bool) {
         self.typing_enabled.set(enabled);
     }
+
+    pub fn is_typing_enabled(&self) -> bool {
+        self.typing_enabled.get()
+    }
 }

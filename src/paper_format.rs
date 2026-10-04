@@ -1,26 +1,28 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PaperFormat {
-    A4,    // A4 Sayfa: Standart resmi/belge kağıdı (satır sonu: ~70 karakter)
-    Novel, // Roman / Kitap: Dar format edebi metin (satır sonu: ~52 karakter)
+    A4,    // A4 Standart Sayfa (Genişlik: 800px, Satır: ~60 karakter)
+    Novel, // Roman / Kitap Formatı (Genişlik: 600px, Satır: ~44 karakter)
 }
 
-#[allow(dead_code)]
 impl PaperFormat {
+    #[allow(dead_code)]
     pub fn all() -> Vec<PaperFormat> {
         vec![PaperFormat::A4, PaperFormat::Novel]
     }
 
+    #[allow(dead_code)]
     pub fn label_tr(&self) -> &'static str {
         match self {
-            PaperFormat::A4 => "📄 A4 Formatı (~70 Karakter)",
-            PaperFormat::Novel => "📖 Roman Formatı (~52 Karakter)",
+            PaperFormat::A4 => "A4 Sayfa (~60 Karakter)",
+            PaperFormat::Novel => "Roman / Kitap (~44 Karakter)",
         }
     }
 
+    #[allow(dead_code)]
     pub fn label_en(&self) -> &'static str {
         match self {
-            PaperFormat::A4 => "📄 A4 Format (~70 Chars)",
-            PaperFormat::Novel => "📖 Novel Format (~52 Chars)",
+            PaperFormat::A4 => "A4 Page (~60 Chars)",
+            PaperFormat::Novel => "Novel / Book (~44 Chars)",
         }
     }
 
@@ -31,10 +33,17 @@ impl PaperFormat {
         }
     }
 
-    pub fn line_margin_cols(&self) -> usize {
+    pub fn line_capacity(&self) -> usize {
         match self {
-            PaperFormat::A4 => 70,
-            PaperFormat::Novel => 52,
+            PaperFormat::A4 => 60,
+            PaperFormat::Novel => 44,
+        }
+    }
+
+    pub fn bell_trigger_col(&self) -> usize {
+        match self {
+            PaperFormat::A4 => 54, // Satır sonuna 6 karakter kala daktilo uyarı zili çalar
+            PaperFormat::Novel => 38,
         }
     }
 }
