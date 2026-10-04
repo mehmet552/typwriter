@@ -1,0 +1,170 @@
+/* ============================================
+   TYPWRITER - Daktilo Temalı Yazma Uygulaması
+   GTK4 CSS Stilleri
+   ============================================ */
+
+/* === BASE TYPEWRITER THEME === */
+
+.typewriter-window {
+    background-color: #1a1a1a;
+}
+
+/* Text editor - the "paper" */
+.typewriter-paper {
+    background-color: #1e1e1e;
+    color: #d4c5a9;
+    font-family: "Courier Prime", "Courier New", "Liberation Mono", "Noto Mono", monospace;
+    font-size: 20px;
+    caret-color: #d4c5a9;
+    transition: background-color 0.8s ease, color 0.8s ease;
+}
+
+.typewriter-paper text {
+    background-color: #1e1e1e;
+    color: #d4c5a9;
+    transition: background-color 0.8s ease, color 0.8s ease;
+}
+
+.typewriter-paper text selection {
+    background-color: rgba(212, 197, 169, 0.3);
+    color: #ffffff;
+}
+
+/* Status bar */
+.status-bar {
+    padding: 8px 24px;
+    font-size: 13px;
+    font-family: "Courier Prime", "Courier New", "Liberation Mono", monospace;
+    color: rgba(180, 170, 150, 0.6);
+    background-color: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    transition: color 0.8s ease, background-color 0.8s ease;
+}
+
+/* Atmosphere selector button */
+.atmosphere-selector {
+    min-width: 160px;
+}
+
+/* === GLOW OVERLAY === */
+.glow-overlay {
+    opacity: 0;
+    transition: opacity 0.8s ease, background 0.8s ease;
+}
+
+/* === ATMOSPHERE: SILENT (default) === */
+.atmosphere-silent .glow-overlay {
+    opacity: 0;
+}
+
+/* === ATMOSPHERE: FIREPLACE === */
+.atmosphere-fireplace .glow-overlay {
+    opacity: 1;
+    background:
+        radial-gradient(ellipse 120% 60% at 50% 100%, rgba(255, 100, 20, 0.2) 0%, transparent 70%),
+        radial-gradient(ellipse 80% 40% at 25% 100%, rgba(255, 60, 0, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 40% at 75% 100%, rgba(255, 140, 40, 0.1) 0%, transparent 60%);
+    animation: fireplace-glow 4s ease-in-out infinite alternate;
+}
+
+.atmosphere-fireplace .typewriter-paper {
+    color: #e0c8a0;
+    background-color: #1c1810;
+}
+
+.atmosphere-fireplace .typewriter-paper text {
+    color: #e0c8a0;
+    background-color: #1c1810;
+}
+
+.atmosphere-fireplace .status-bar {
+    color: rgba(224, 180, 120, 0.5);
+    background-color: rgba(28, 18, 8, 0.6);
+}
+
+@keyframes fireplace-glow {
+    0%   { opacity: 0.5; }
+    20%  { opacity: 0.85; }
+    40%  { opacity: 0.65; }
+    60%  { opacity: 0.95; }
+    80%  { opacity: 0.7; }
+    100% { opacity: 0.8; }
+}
+
+/* === ATMOSPHERE: RAIN === */
+.atmosphere-rain .glow-overlay {
+    opacity: 1;
+    background: linear-gradient(180deg,
+        rgba(40, 60, 100, 0.15) 0%,
+        rgba(30, 50, 80, 0.1) 40%,
+        rgba(20, 40, 70, 0.2) 100%);
+    animation: rain-ambiance 6s ease-in-out infinite alternate;
+}
+
+.atmosphere-rain .typewriter-paper {
+    color: #b8c8d8;
+    background-color: #161a22;
+}
+
+.atmosphere-rain .typewriter-paper text {
+    color: #b8c8d8;
+    background-color: #161a22;
+}
+
+.atmosphere-rain .status-bar {
+    color: rgba(140, 160, 190, 0.5);
+    background-color: rgba(16, 20, 30, 0.6);
+}
+
+@keyframes rain-ambiance {
+    0%   { opacity: 0.6; }
+    50%  { opacity: 1.0; }
+    100% { opacity: 0.75; }
+}
+
+/* === ATMOSPHERE: NIGHT === */
+.atmosphere-night .glow-overlay {
+    opacity: 1;
+    background:
+        radial-gradient(ellipse 100% 80% at 70% 8%, rgba(180, 200, 255, 0.06) 0%, transparent 50%),
+        linear-gradient(180deg, rgba(10, 10, 30, 0.2) 0%, rgba(5, 5, 20, 0.3) 100%);
+}
+
+.atmosphere-night .typewriter-paper {
+    color: #9aa0b4;
+    background-color: #121218;
+}
+
+.atmosphere-night .typewriter-paper text {
+    color: #9aa0b4;
+    background-color: #121218;
+}
+
+.atmosphere-night .status-bar {
+    color: rgba(120, 130, 160, 0.4);
+    background-color: rgba(10, 10, 18, 0.6);
+}
+
+/* === ATMOSPHERE: CAFE === */
+.atmosphere-cafe .glow-overlay {
+    opacity: 1;
+    background:
+        radial-gradient(ellipse 100% 80% at 50% 0%, rgba(255, 200, 120, 0.1) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 20%, rgba(255, 180, 100, 0.06) 0%, transparent 50%),
+        linear-gradient(180deg, rgba(40, 30, 15, 0.1) 0%, rgba(30, 20, 10, 0.15) 100%);
+}
+
+.atmosphere-cafe .typewriter-paper {
+    color: #d8c8a8;
+    background-color: #1a1810;
+}
+
+.atmosphere-cafe .typewriter-paper text {
+    color: #d8c8a8;
+    background-color: #1a1810;
+}
+
+.atmosphere-cafe .status-bar {
+    color: rgba(200, 170, 120, 0.5);
+    background-color: rgba(20, 18, 10, 0.6);
+}

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Typwriter
+Comment=Daktilo temalı odaklanma yazma uygulaması
+Comment[en]=Typewriter-themed focused writing application
+Exec=typwriter
+Icon=com.github.mehmet.typwriter
+Terminal=false
+Type=Application
+Categories=Office;TextEditor;
+Keywords=typewriter;writing;focus;distraction-free;daktilo;yazma;
+StartupWMClass=com.github.mehmet.typwriter

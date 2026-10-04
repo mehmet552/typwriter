@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.github.mehmet.typwriter</id>
+  <name>Typwriter</name>
+  <summary>Daktilo temalı odaklanma yazma uygulaması</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>Typwriter, daktilo deneyimini modern masaüstünüze taşıyan odaklanma yazma uygulamasıdır.</p>
+    <p>Her tuşa bastığınızda gerçekçi daktilo sesleri duyar, farklı atmosfer ortamları (şömine, yağmur, gece, kafe) ile kendinizi yazma moduna sokarsınız.</p>
+    <p xml:lang="en">Typwriter brings the typewriter experience to your modern desktop. Hear realistic typewriter sounds with every keystroke and immerse yourself in different atmospheres (fireplace, rain, night, cafe).</p>
+  </description>
+  <url type="homepage">https://github.com/mehmet/typwriter</url>
+  <url type="bugtracker">https://github.com/mehmet/typwriter/issues</url>
+  <developer_name>Mehmet</developer_name>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="1.0.0" date="2026-10-04">
+      <description>
+        <p>İlk sürüm!</p>
+      </description>
+    </release>
+  </releases>
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </recommends>
+</component>
