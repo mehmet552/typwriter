@@ -223,13 +223,11 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     dropdown.add_css_class("atmosphere-selector");
 
     let sm_clone = sound_manager.clone();
-    let window_ref: Rc<RefCell<Option<adw::ApplicationWindow>>> = Rc::new(RefCell::new(None));
-    let win_ref_clone = window_ref.clone();
     dropdown.connect_selected_notify(move |dd| {
         let idx = dd.selected() as usize;
         let atm = crate::atmosphere::Atmosphere::all()[idx];
         sm_clone.set_atmosphere(atm);
-        if let Some(win) = win_ref_clone.borrow().as_ref() {
+        if let Some(win) = dd.root().and_downcast::<adw::ApplicationWindow>() {
             for a in crate::atmosphere::Atmosphere::all() {
                 win.remove_css_class(a.css_class());
             }
@@ -248,7 +246,6 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     settings_btn.set_tooltip_text(Some(strings.settings_tooltip));
     header.pack_end(&settings_btn);
 
-    let win_ref_for_settings = window_ref.clone();
     let tw_widget_ref = tw_widget.clone();
     let sm_ref = sound_manager.clone();
     let pf_ref = current_paper_format.clone();
@@ -263,8 +260,8 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     let settings_btn_ref = settings_btn.clone();
     let status_lbl_ref = status_bar.clone();
 
-    settings_btn.connect_clicked(move |_| {
-        let parent_win = win_ref_for_settings.borrow().clone();
+    settings_btn.connect_clicked(move |btn| {
+        let parent_win = btn.root().and_downcast::<adw::ApplicationWindow>();
         let current_language = *lang_ref.borrow();
         let s = get_strings(current_language);
 
@@ -409,24 +406,27 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     window.add_css_class("typewriter-window");
     window.add_css_class("atmosphere-silent");
 
-    *window_ref.borrow_mut() = Some(window.clone());
-
     // Tam ekran toggle
-    let win_clone = window.clone();
-    fullscreen_btn.connect_clicked(move |_| {
-        win_clone.set_fullscreened(!win_clone.is_fullscreen());
+    fullscreen_btn.connect_clicked(move |btn| {
+        if let Some(win) = btn.root().and_downcast::<adw::ApplicationWindow>() {
+            win.set_fullscreened(!win.is_fullscreen());
+        }
     });
 
     // Klavye kısayolları (F11: Tam Ekran, Ctrl+S: Kaydet, Ctrl+Shift+S: Farklı Kaydet, Ctrl+O: Aç)
     let key_controller = gtk4::EventControllerKey::new();
-    let win_clone2 = window.clone();
     let do_save_shortcut = do_direct_save.clone();
     let do_save_as_shortcut = do_save_as.clone();
     let open_btn_shortcut = open_btn.clone();
 
-    key_controller.connect_key_pressed(move |_, keyval, _, state| {
+    key_controller.connect_key_pressed(move |ctrl, keyval, _, state| {
+        let parent_win = ctrl.widget().and_downcast::<adw::ApplicationWindow>();
+        let win_ref = parent_win.as_ref().map(|w| w.upcast_ref::<gtk4::Window>());
+
         if keyval == gtk4::gdk::Key::F11 {
-            win_clone2.set_fullscreened(!win_clone2.is_fullscreen());
+            if let Some(win) = &parent_win {
+                win.set_fullscreened(!win.is_fullscreen());
+            }
             return gtk4::glib::Propagation::Stop;
         }
 
@@ -435,11 +435,10 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
 
         if is_ctrl {
             if keyval == gtk4::gdk::Key::s || keyval == gtk4::gdk::Key::S {
-                let win_ref = win_clone2.upcast_ref::<gtk4::Window>();
                 if is_shift {
-                    do_save_as_shortcut(Some(win_ref));
+                    do_save_as_shortcut(win_ref);
                 } else {
-                    do_save_shortcut(Some(win_ref));
+                    do_save_shortcut(win_ref);
                 }
                 return gtk4::glib::Propagation::Stop;
             } else if keyval == gtk4::gdk::Key::o || keyval == gtk4::gdk::Key::O {
