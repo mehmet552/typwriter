@@ -11,9 +11,11 @@ pub struct TypewriterState {
     pub return_progress: f32,   // 1.0 (başa dönüyor) -> 0.0 (başta)
     pub is_returning: bool,
     pub carriage_steps: usize,  // Satırdaki karakter adımı
+    pub return_steps: usize,    // Başa dönüş için son karakter adımı
     pub active_key_index: Option<usize>, // 0..18 hangi çekiç kolu kalktı
     pub roller_roll_angle: f64, // Enter basıldığında silindirin dönme açısı
     pub bell_played_on_line: bool, // Satır sonu zili çaldı mı
+    pub paper_format: crate::paper_format::PaperFormat,
 }
 
 impl TypewriterState {
@@ -25,9 +27,11 @@ impl TypewriterState {
             return_progress: 0.0,
             is_returning: false,
             carriage_steps: 0,
+            return_steps: 0,
             active_key_index: None,
             roller_roll_angle: 0.0,
             bell_played_on_line: false,
+            paper_format: crate::paper_format::PaperFormat::A4,
         }
     }
 }
@@ -136,7 +140,7 @@ pub fn create_typewriter_widget() -> (gtk4::DrawingArea, Rc<RefCell<TypewriterSt
         // ==========================================
         // 3. MERDANE ÜZERİNDEKİ KAĞIT (Paper on Platen)
         // ==========================================
-        let paper_w = 700.0;
+        let paper_w = st.paper_format.width_pixels() as f64;
         // Kağıdın sol kenarı, yazılan son karakterin tam center_x vuruş noktasına denk gelmesini sağlar
         let paper_x = center_x - margin_left - step_offset;
         let paper_y = platen_y - 10.0;
@@ -298,6 +302,8 @@ pub fn create_typewriter_widget() -> (gtk4::DrawingArea, Rc<RefCell<TypewriterSt
             let p = st.strike_progress as f64;
             if let Some(ch) = st.last_char {
                 cr.save().unwrap();
+                cr.rectangle(paper_x, paper_y, paper_w, paper_h);
+                cr.clip();
                 cr.set_source_rgba(0.88, 0.22, 0.16, p * 0.95); // Canlı şerit mürekkebi
                 cr.select_font_face("monospace", gtk4::cairo::FontSlant::Normal, gtk4::cairo::FontWeight::Bold);
                 cr.set_font_size(20.0);

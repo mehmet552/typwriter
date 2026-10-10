@@ -247,6 +247,7 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
     header.pack_end(&settings_btn);
 
     let tw_widget_ref = tw_widget.clone();
+    let tw_state_ref = tw_state.clone();
     let sm_ref = sound_manager.clone();
     let pf_ref = current_paper_format.clone();
     let lang_ref = current_lang.clone();
@@ -322,13 +323,15 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
         } else {
             "Page margins and line length"
         });
-        let format_items: &[&str] = &[s.format_a4, s.format_novel];
-        let format_model = gtk4::StringList::new(format_items);
+        let format_items = [s.format_a4, s.format_novel];
+        let format_model = gtk4::StringList::new(format_items.as_slice());
         format_row.set_model(Some(&format_model));
         let cur_fmt = *pf_ref.borrow();
         format_row.set_selected(if cur_fmt == crate::paper_format::PaperFormat::Novel { 1 } else { 0 });
 
         let pf_inner = pf_ref.clone();
+        let tw_state_inner = tw_state_ref.clone();
+        let tw_widget_inner = tw_widget_ref.clone();
         let clamp_inner = clamp_ref.clone();
         let tv_inner = tv_ref.clone();
         format_row.connect_selected_notify(move |cr| {
@@ -338,6 +341,8 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
                 crate::paper_format::PaperFormat::A4
             };
             *pf_inner.borrow_mut() = new_fmt;
+            tw_state_inner.borrow_mut().paper_format = new_fmt;
+            tw_widget_inner.queue_draw();
             clamp_inner.set_maximum_size(new_fmt.width_pixels());
             clamp_inner.set_tightening_threshold(new_fmt.width_pixels());
             tv_inner.set_width_request(new_fmt.width_pixels());
@@ -347,8 +352,8 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
         // 4. Dil (Türkçe / English)
         let lang_row = adw::ComboRow::new();
         lang_row.set_title(s.language_label);
-        let lang_items: &[&str] = &["Türkçe", "English"];
-        let lang_model = gtk4::StringList::new(lang_items);
+        let lang_items = ["Türkçe", "English"];
+        let lang_model = gtk4::StringList::new(lang_items.as_slice());
         lang_row.set_model(Some(&lang_model));
         lang_row.set_selected(if current_language == Language::English { 1 } else { 0 });
 
