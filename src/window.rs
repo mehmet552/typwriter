@@ -322,7 +322,8 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
         } else {
             "Page margins and line length"
         });
-        let format_model = gtk4::StringList::new(&[s.format_a4, s.format_novel][..]);
+        let format_items: &[&str] = &[s.format_a4, s.format_novel];
+        let format_model = gtk4::StringList::new(format_items);
         format_row.set_model(Some(&format_model));
         let cur_fmt = *pf_ref.borrow();
         format_row.set_selected(if cur_fmt == crate::paper_format::PaperFormat::Novel { 1 } else { 0 });
@@ -346,7 +347,8 @@ pub fn build_window(app: &adw::Application) -> adw::ApplicationWindow {
         // 4. Dil (Türkçe / English)
         let lang_row = adw::ComboRow::new();
         lang_row.set_title(s.language_label);
-        let lang_model = gtk4::StringList::new(&["Türkçe", "English"][..]);
+        let lang_items: &[&str] = &["Türkçe", "English"];
+        let lang_model = gtk4::StringList::new(lang_items);
         lang_row.set_model(Some(&lang_model));
         lang_row.set_selected(if current_language == Language::English { 1 } else { 0 });
 
