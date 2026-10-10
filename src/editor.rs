@@ -98,11 +98,6 @@ pub fn create_editor(
                 st.active_key_index = Some(9);
                 st.current_line.push(' ');
 
-                if st.current_line.len() > 45 {
-                    let trim_idx = st.current_line.char_indices().nth(8).map(|(i, _)| i).unwrap_or(0);
-                    st.current_line = st.current_line[trim_idx..].to_string();
-                }
-
                 gtk4::glib::Propagation::Proceed
             }
             _ => {
@@ -141,11 +136,6 @@ pub fn create_editor(
                     st.active_key_index = Some(bar_idx);
                     st.last_char = Some(ch);
                     st.current_line.push(ch);
-
-                    if st.current_line.len() > 45 {
-                        let trim_idx = st.current_line.char_indices().nth(8).map(|(i, _)| i).unwrap_or(0);
-                        st.current_line = st.current_line[trim_idx..].to_string();
-                    }
 
                     gtk4::glib::Propagation::Proceed
                 } else {

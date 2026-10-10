@@ -1,6 +1,7 @@
 use rodio::Source;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 // Gerçek daktilo sesleri (Kullanıcının yüklediği ses dosyasından çıkarılan orijinal sesler)
 static SOUND_KEY1: &[u8] = include_bytes!("../data/sounds/key1.wav");
@@ -26,11 +27,12 @@ static SOUND_RAIN: &[u8] = include_bytes!("../data/sounds/rain.wav");
 // Gerçek Caz Sesi (Kullanıcının yüklediği orijinal vintage caz kaydı)
 static SOUND_JAZZ: &[u8] = include_bytes!("../data/sounds/jazz.wav");
 
-fn decode_wav(bytes: &'static [u8]) -> Vec<f32> {
+fn decode_wav(bytes: &'static [u8]) -> Arc<Vec<f32>> {
     if let Ok(decoder) = rodio::Decoder::new(std::io::Cursor::new(bytes)) {
-        return decoder.convert_samples::<f32>().collect();
+        let samples: Vec<f32> = decoder.convert_samples::<f32>().collect();
+        return Arc::new(samples);
     }
-    vec![]
+    Arc::new(vec![])
 }
 
 #[allow(dead_code)]
@@ -38,12 +40,12 @@ pub struct SoundManager {
     _stream: rodio::OutputStream,
     stream_handle: rodio::OutputStreamHandle,
     ambient_sink: RefCell<Option<rodio::Sink>>,
-    key_sounds: Vec<Vec<f32>>,
-    space_sound: Vec<f32>,
-    enter_sound: Vec<f32>,
-    backspace_sound: Vec<f32>,
-    bell_sound: Vec<f32>,
-    ambient_sounds: HashMap<String, Vec<f32>>,
+    key_sounds: Vec<Arc<Vec<f32>>>,
+    space_sound: Arc<Vec<f32>>,
+    enter_sound: Arc<Vec<f32>>,
+    backspace_sound: Arc<Vec<f32>>,
+    bell_sound: Arc<Vec<f32>>,
+    ambient_sounds: HashMap<String, Arc<Vec<f32>>>,
     typing_enabled: Cell<bool>,
     ambient_volume: Cell<f32>,
     current_click: Cell<usize>,
@@ -114,11 +116,11 @@ impl SoundManager {
         })
     }
 
-    fn play_oneshot(&self, samples: &[f32]) {
+    fn play_oneshot(&self, samples: &Arc<Vec<f32>>) {
         if !self.typing_enabled.get() || samples.is_empty() {
             return;
         }
-        let source = rodio::buffer::SamplesBuffer::new(1, 44100, samples.to_vec());
+        let source = rodio::buffer::SamplesBuffer::new(1, 44100, samples.as_slice().to_vec());
         let _ = self.stream_handle.play_raw(source.convert_samples());
     }
 
@@ -160,7 +162,7 @@ impl SoundManager {
         let key = format!("{:?}", atm);
         if let Some(samples) = self.ambient_sounds.get(&key) {
             if let Some(sink) = rodio::Sink::try_new(&self.stream_handle).ok() {
-                let source = rodio::buffer::SamplesBuffer::new(1, 44100, samples.clone());
+                let source = rodio::buffer::SamplesBuffer::new(1, 44100, samples.as_slice().to_vec());
                 sink.append(source.repeat_infinite());
                 sink.set_volume(self.ambient_volume.get());
                 *self.ambient_sink.borrow_mut() = Some(sink);

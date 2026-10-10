@@ -74,27 +74,30 @@ pub fn create_typewriter_widget() -> (gtk4::DrawingArea, Rc<RefCell<TypewriterSt
         // ==========================================
         // 2. HAREKETLİ ŞARYO & MERDANE (Carriage & Platen)
         // ==========================================
-        // Şaryo hareketi: Her tuş basışında şaryo sola kayar (adım: 10px)
-        // Enter basıldığında return_progress boyunca yumuşakça sağa (başa) kayar
-        let step_offset = (st.carriage_steps as f64 * 10.0).min(center_x - 60.0);
-        let carriage_shift = if st.is_returning {
-            step_offset * (1.0 - st.return_progress as f64)
+        // Şaryo hareketi: Her tuş basışında şaryo tam 10px sola kayar.
+        // Enter basıldığında return_progress boyunca yumuşakça sağa (başa) kayar.
+        let char_spacing = 10.0;
+        let margin_left = 20.0;
+
+        let current_step = if st.is_returning {
+            (st.carriage_steps as f64) * (st.return_progress as f64)
         } else {
-            step_offset
+            st.carriage_steps as f64
         };
 
+        let step_offset = current_step * char_spacing;
         let platen_y = 12.0;
         let platen_h = 32.0;
-        let carriage_x = center_x - carriage_shift;
+
+        // Merdane kauçuk silindiri (Platen Roller)
+        let roller_w = (w * 0.95).max(750.0);
+        let carriage_x = center_x - step_offset;
+        let roller_x = carriage_x - (roller_w / 2.0);
 
         // Şaryo arka rayı (Gümüş metal ray)
         cr.set_source_rgb(0.22, 0.22, 0.26);
         cr.rectangle(15.0, platen_y + 4.0, w - 30.0, platen_h - 8.0);
         let _ = cr.fill();
-
-        // Merdane kauçuk silindiri (Platen Roller - döküm kauçuk silindir)
-        let roller_w = (w * 0.85).max(500.0);
-        let roller_x = carriage_x - (roller_w / 2.0);
 
         let roller_grad = gtk4::cairo::LinearGradient::new(0.0, platen_y, 0.0, platen_y + platen_h);
         roller_grad.add_color_stop_rgb(0.0, 0.12, 0.12, 0.14);
@@ -133,8 +136,9 @@ pub fn create_typewriter_widget() -> (gtk4::DrawingArea, Rc<RefCell<TypewriterSt
         // ==========================================
         // 3. MERDANE ÜZERİNDEKİ KAĞIT (Paper on Platen)
         // ==========================================
-        let paper_w = 460.0;
-        let paper_x = carriage_x - 60.0; // Yazının başlayacağı yer
+        let paper_w = 700.0;
+        // Kağıdın sol kenarı, yazılan son karakterin tam center_x vuruş noktasına denk gelmesini sağlar
+        let paper_x = center_x - margin_left - step_offset;
         let paper_y = platen_y - 10.0;
         let paper_h = platen_h + 16.0;
 
@@ -179,8 +183,7 @@ pub fn create_typewriter_widget() -> (gtk4::DrawingArea, Rc<RefCell<TypewriterSt
         cr.select_font_face("monospace", gtk4::cairo::FontSlant::Normal, gtk4::cairo::FontWeight::Bold);
         cr.set_font_size(16.0);
 
-        let char_spacing = 10.0;
-        let mut text_draw_x = paper_x + 16.0;
+        let mut text_draw_x = paper_x + margin_left;
         let text_draw_y = platen_y + 18.0;
 
         for ch in st.current_line.chars() {
