@@ -38,6 +38,8 @@ pub fn create_editor(
         }
 
         let capacity = pf_clone.borrow().line_capacity();
+        let page_capacity = pf_clone.borrow().page_capacity();
+        let page_line_capacity = pf_clone.borrow().page_line_capacity();
 
         // Mevcut imlecin satırdaki karakter konumu (satır başından kaçıncı karakter)
         let buf = tv_clone.buffer();
@@ -48,9 +50,20 @@ pub fn create_editor(
             0
         };
         let has_selection = buf.has_selection();
+        let selected_chars = buf
+            .selection_bounds()
+            .map(|(start, end)| (end.offset() - start.offset()) as usize)
+            .unwrap_or(0);
+        let chars_after_selection = (buf.char_count() as usize).saturating_sub(selected_chars);
 
         match keyval {
             gtk4::gdk::Key::Return | gtk4::gdk::Key::KP_Enter => {
+                if buf.line_count() as usize >= page_line_capacity
+                    || chars_after_selection >= page_capacity
+                {
+                    return gtk4::glib::Propagation::Stop;
+                }
+
                 sm.play_enter();
                 let mut st = tw.borrow_mut();
                 st.is_returning = true;
@@ -80,7 +93,9 @@ pub fn create_editor(
             gtk4::gdk::Key::space => {
                 // Tik sesinden sonra (satır kapasitesine ulaşıldığında):
                 // KİLİTLE! Otomatik alt satıra geçmeden yazmayı durdur. Enter şart!
-                if !has_selection && cur_line_col >= capacity {
+                if (!has_selection && cur_line_col >= capacity)
+                    || chars_after_selection >= page_capacity
+                {
                     return gtk4::glib::Propagation::Stop;
                 }
 
@@ -104,7 +119,9 @@ pub fn create_editor(
                 if let Some(ch) = keyval.to_unicode() {
                     // Tik sesinden sonra (satır kapasitesine ulaşıldığında):
                     // KİLİTLE! Enter basıp alt satıra inmeden kesinlikle daha fazla yazılamaz!
-                    if !has_selection && cur_line_col >= capacity {
+                    if (!has_selection && cur_line_col >= capacity)
+                        || chars_after_selection >= page_capacity
+                    {
                         return gtk4::glib::Propagation::Stop;
                     }
 

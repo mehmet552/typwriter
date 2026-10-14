@@ -73,7 +73,7 @@ pub fn get_strings(lang: Language) -> Strings {
             atm_night: "Gece",
             atm_jazz: "Jazz",
             paper_format_label: "Kağıt Formatı",
-            format_a4: "A4 Sayfa (~60 Karakter)",
+            format_a4: "A4 Sayfa (~76 karakter/satır, 4560 toplam)",
             format_novel: "Roman / Kitap (~44 Karakter)",
         },
         Language::English => Strings {
@@ -100,7 +100,7 @@ pub fn get_strings(lang: Language) -> Strings {
             atm_night: "Night",
             atm_jazz: "Jazz",
             paper_format_label: "Paper Format",
-            format_a4: "A4 Page (~60 Chars)",
+            format_a4: "A4 Page (~76 chars/line, 4560 total)",
             format_novel: "Novel / Book (~44 Chars)",
         },
     }
