@@ -71,6 +71,7 @@ pub fn create_editor(
                 st.strike_progress = 0.0;
                 st.last_char = None;
                 st.active_key_index = None;
+                st.return_steps = st.carriage_steps;
                 st.carriage_steps = 0;
                 st.bell_played_on_line = false;
                 st.current_line.clear();

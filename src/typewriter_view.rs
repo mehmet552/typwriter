@@ -84,7 +84,7 @@ pub fn create_typewriter_widget() -> (gtk4::DrawingArea, Rc<RefCell<TypewriterSt
         let margin_left = 20.0;
 
         let current_step = if st.is_returning {
-            (st.carriage_steps as f64) * (st.return_progress as f64)
+            (st.return_steps as f64) * (st.return_progress as f64)
         } else {
             st.carriage_steps as f64
         };
@@ -124,16 +124,16 @@ pub fn create_typewriter_widget() -> (gtk4::DrawingArea, Rc<RefCell<TypewriterSt
         let lever_angle = if st.is_returning { 0.35 } else { 0.0 };
         cr.save().unwrap();
         cr.translate(roller_x - 6.0, platen_y + 8.0);
-        cr.rotate(-lever_angle);
+        cr.rotate(0.0 - lever_angle);
         cr.set_source_rgb(0.72, 0.72, 0.80); // Krom parlak kol
         cr.set_line_width(4.0);
         cr.move_to(0.0, 0.0);
-        cr.line_to(-28.0, -18.0);
-        cr.line_to(-42.0, -12.0);
+        cr.line_to(0.0 - 28.0, 0.0 - 18.0);
+        cr.line_to(0.0 - 42.0, 0.0 - 12.0);
         let _ = cr.stroke();
         // Kol ucu topuzu
         cr.set_source_rgb(0.85, 0.85, 0.92);
-        cr.arc(-42.0, -12.0, 4.5, 0.0, 2.0 * PI);
+        cr.arc(0.0 - 42.0, 0.0 - 12.0, 4.5, 0.0, 2.0 * PI);
         let _ = cr.fill();
         cr.restore().unwrap();
 
@@ -385,6 +385,7 @@ pub fn create_typewriter_widget() -> (gtk4::DrawingArea, Rc<RefCell<TypewriterSt
                 st.return_progress = 0.0;
                 st.is_returning = false;
                 st.carriage_steps = 0;
+                st.return_steps = 0;
             }
             needs_redraw = true;
         }
